@@ -111,12 +111,14 @@ Fill in:
 
 1. Click on any assumption card
 2. Use the sliders to set:
-   - **Importance** (1-10): How critical is it if we get this wrong?
-   - **Confidence** (1-10): How sure are you about this assumption?
+   - **Impact if wrong** (1-10): How much value/harm if this assumption is wrong?
+   - **Confidence we know the answer** (1-10): How certain are you this is true?
 3. Add optional notes
 4. Click "Save Score"
 
-The risk score is calculated automatically: **Risk = Importance × (10 - Confidence)**
+The risk score is calculated automatically: **Risk = Impact × (10 - Confidence)**
+
+Higher impact + lower confidence = higher risk, which means this hypothesis should be prioritized for testing.
 
 ### 4. View Modes
 
