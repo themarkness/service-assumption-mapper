@@ -125,15 +125,15 @@ The risk score is calculated automatically: **Risk = Importance × (10 - Confide
 - Drag cards between categories
 - View count of assumptions per category
 
-**Grid View**:
+**Grid View** (Hypothesis Prioritization Canvas):
 - See scored assumptions positioned on a 2×2 matrix
-- X-axis: Certainty (Uncertain → Certain)
-- Y-axis: Importance (Low → High)
-- Four quadrants:
-  - **Priority to Test** (top-left): Uncertain + Important
-  - **Validate Confidence** (top-right): Certain + Important
-  - **Defer for Now** (bottom-left): Uncertain + Unimportant
-  - **Document as Axioms** (bottom-right): Certain + Unimportant
+- X-axis: Risk (Low risk → High risk)
+- Y-axis: Perceived Value (Low value → High value)
+- Four quadrants based on GDS methodology:
+  - **Ship & Measure** (top-left): High value + Low risk - High confidence hypotheses that deliver value, build and measure
+  - **Test** (top-right): High value + High risk - Promise of big return but significant risks, focus experimentation here
+  - **Don't Test. Usually Don't Build** (bottom-left): Low value + Low risk - Don't add significant value, sometimes table stakes
+  - **Discard** (bottom-right): Low value + High risk - Provide little value and pose high risk, don't spend time on these
 
 ### 5. Exporting Results
 
