@@ -32,9 +32,9 @@ export const GridView: React.FC = () => {
   return (
     <div className="p-6 h-full">
       <div className="bg-white rounded shadow-md p-6 h-[calc(100vh-200px)]">
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full" style={{ paddingLeft: '50px', paddingBottom: '30px' }}>
           {/* Grid container */}
-          <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-1">
+          <div className="absolute grid grid-cols-2 grid-rows-2 gap-1" style={{ left: '50px', right: '0', top: '0', bottom: '30px' }}>
             {/* Top-left: Priority to Test */}
             <div className="bg-quadrant-priority border-2 border-orange-300 rounded-tl p-4">
               <h3 className="font-bold text-sm">Priority to Test</h3>
@@ -61,26 +61,28 @@ export const GridView: React.FC = () => {
           </div>
 
           {/* Axis labels */}
-          <div className="absolute bottom-0 left-0 right-0 flex justify-between text-sm font-medium text-gray-700 pb-2 px-4">
+          <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs font-medium text-gray-600 pb-1 px-12">
             <span>Uncertain</span>
-            <span className="text-center">Certainty →</span>
+            <span>← Certainty →</span>
             <span>Certain</span>
           </div>
 
-          <div className="absolute top-0 bottom-0 left-0 flex flex-col justify-between text-sm font-medium text-gray-700 pl-2 py-4 writing-mode-vertical">
-            <span className="transform -rotate-90 origin-center whitespace-nowrap">
-              Unimportant
-            </span>
-            <span className="transform -rotate-90 origin-center whitespace-nowrap">
-              Importance ↑
-            </span>
-            <span className="transform -rotate-90 origin-center whitespace-nowrap">
-              Important
-            </span>
+          <div className="absolute top-0 bottom-0 left-0 flex items-center" style={{ width: '40px' }}>
+            <div className="flex flex-col justify-between h-full py-12 w-full">
+              <span className="text-xs font-medium text-gray-600 transform -rotate-90 whitespace-nowrap" style={{ transformOrigin: 'center', margin: 'auto' }}>
+                Important
+              </span>
+              <span className="text-xs font-medium text-gray-600 transform -rotate-90 whitespace-nowrap" style={{ transformOrigin: 'center', margin: 'auto' }}>
+                ↑ Importance ↓
+              </span>
+              <span className="text-xs font-medium text-gray-600 transform -rotate-90 whitespace-nowrap" style={{ transformOrigin: 'center', margin: 'auto' }}>
+                Unimportant
+              </span>
+            </div>
           </div>
 
           {/* Assumption cards positioned on grid */}
-          <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute pointer-events-none" style={{ left: '50px', right: '0', top: '0', bottom: '30px' }}>
             {projectAssumptions.map((assumption) => {
               const pos = getPosition(assumption);
               return (
