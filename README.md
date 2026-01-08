@@ -112,13 +112,13 @@ Fill in:
 1. Click on any assumption card
 2. Use the sliders to set:
    - **Impact if wrong** (1-10): How much value/harm if this assumption is wrong?
-   - **Confidence we know the answer** (1-10): How certain are you this is true?
+   - **Evidence** (1-10): How much evidence do we have to support this?
 3. Add optional notes
 4. Click "Save Score"
 
-The risk score is calculated automatically: **Risk = Impact × (10 - Confidence)**
+The risk score is calculated automatically: **Risk = Impact × (10 - Evidence)**
 
-Higher impact + lower confidence = higher risk, which means this hypothesis should be prioritized for testing.
+Higher impact + lower evidence = higher risk, which means this hypothesis should be prioritized for validation.
 
 ### 4. View Modes
 
@@ -127,15 +127,15 @@ Higher impact + lower confidence = higher risk, which means this hypothesis shou
 - Drag cards between categories
 - View count of assumptions per category
 
-**Grid View** (Hypothesis Prioritization Canvas):
+**Grid View** (Assumption Mapping Grid):
 - See scored assumptions positioned on a 2×2 matrix
-- X-axis: Risk (Low risk → High risk)
-- Y-axis: Perceived Value (Low value → High value)
-- Four quadrants based on GDS methodology:
-  - **Ship & Measure** (top-left): High value + Low risk - High confidence hypotheses that deliver value, build and measure
-  - **Test** (top-right): High value + High risk - Promise of big return but significant risks, focus experimentation here
-  - **Don't Test. Usually Don't Build** (bottom-left): Low value + Low risk - Don't add significant value, sometimes table stakes
-  - **Discard** (bottom-right): Low value + High risk - Provide little value and pose high risk, don't spend time on these
+- X-axis: Evidence (Low evidence → High evidence)
+- Y-axis: Importance (Unimportant → Important)
+- Four quadrants:
+  - **Validate** (top-left): Low evidence + Important - Promise of big return but pose risk, focus testing and learning here
+  - **Build it** (top-right): High evidence + Important - High confidence these will deliver customer value, don't spend discovery cycles here
+  - **Discard** (bottom-left): Low evidence + Unimportant - Not much confidence and not important, don't waste time here
+  - **Don't test. Usually don't build** (bottom-right): High evidence + Unimportant - Not impactful to users, but sometimes table stakes business functionality
 
 ### 5. Exporting Results
 

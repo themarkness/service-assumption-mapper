@@ -18,12 +18,11 @@ export const GridView: React.FC = () => {
       return assumption.manualPosition;
     }
 
-    // X-axis: Risk (0-100 scale based on risk score)
-    // Risk score ranges from 0 (low risk) to 100 (high risk)
-    // Higher risk score = further right
-    const x = (assumption.riskScore / 100) * 100;
+    // X-axis: Evidence (1-10 scale)
+    // Higher evidence = further right
+    const x = (assumption.averageConfidence / 10) * 100;
 
-    // Y-axis: Perceived Value/Impact (based on importance)
+    // Y-axis: Importance (1-10 scale)
     // Higher importance = higher up (so we invert it)
     const y = ((10 - assumption.averageImportance) / 10) * 100;
 
@@ -36,56 +35,56 @@ export const GridView: React.FC = () => {
         <div className="relative w-full h-full" style={{ paddingLeft: '50px', paddingBottom: '30px' }}>
           {/* Grid container */}
           <div className="absolute grid grid-cols-2 grid-rows-2 gap-1" style={{ left: '50px', right: '0', top: '0', bottom: '30px' }}>
-            {/* Top-left: Ship & Measure (High value + Low risk) */}
+            {/* Top-left: Validate (Low evidence + Important) */}
             <div className="bg-quadrant-validate border-2 border-blue-300 rounded-tl p-4">
-              <h3 className="font-bold text-sm mb-2">Ship & Measure</h3>
+              <h3 className="font-bold text-sm mb-2">Validate</h3>
               <p className="text-xs text-gray-600 leading-relaxed">
-                High confidence about these hypotheses. Combined with strong belief they will deliver customer and business value, we build, launch and measure them.
+                These assumptions have promise of a big return but pose risk. Focus our testing and learning here.
               </p>
             </div>
 
-            {/* Top-right: Test (High value + High risk) */}
+            {/* Top-right: Build it (High evidence + Important) */}
             <div className="bg-quadrant-priority border-2 border-orange-300 rounded-tr p-4">
-              <h3 className="font-bold text-sm mb-2">Test</h3>
+              <h3 className="font-bold text-sm mb-2">Build it</h3>
               <p className="text-xs text-gray-600 leading-relaxed">
-                Promise of big return but also significant risks. Focus your experimentation, learning and discovery activities here.
+                We have high confidence that these will deliver customer value. Don't spend discovery cycles here.
               </p>
             </div>
 
-            {/* Bottom-left: Don't test. Usually Don't Build (Low value + Low risk) */}
+            {/* Bottom-left: Discard (Low evidence + Unimportant) */}
             <div className="bg-quadrant-defer border-2 border-gray-300 rounded-bl p-4">
-              <h3 className="font-bold text-sm mb-2">Don't Test. Usually Don't Build</h3>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                Don't add significant value but are low risk. Sometimes table stakes for business operation, but won't differentiate you.
-              </p>
-            </div>
-
-            {/* Bottom-right: Discard (Low value + High risk) */}
-            <div className="bg-quadrant-document border-2 border-red-300 rounded-br p-4">
               <h3 className="font-bold text-sm mb-2">Discard</h3>
               <p className="text-xs text-gray-600 leading-relaxed">
-                Provide little value and pose high risk to your business or product. Don't spend any more time on them.
+                We don't have much confidence around this, but at the same time it's not important. Don't waste time here.
+              </p>
+            </div>
+
+            {/* Bottom-right: Don't test. Usually don't build (High evidence + Unimportant) */}
+            <div className="bg-quadrant-document border-2 border-gray-400 rounded-br p-4">
+              <h3 className="font-bold text-sm mb-2">Don't test. Usually don't build</h3>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Not impactful to users, but sometimes table stakes business functionality ends up here.
               </p>
             </div>
           </div>
 
           {/* Axis labels */}
           <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs font-medium text-gray-600 pb-1 px-12">
-            <span>Low risk</span>
-            <span>← Risk →</span>
-            <span>High risk</span>
+            <span>Low evidence</span>
+            <span>← Evidence →</span>
+            <span>High evidence</span>
           </div>
 
           <div className="absolute top-0 bottom-0 left-0 flex items-center" style={{ width: '40px' }}>
             <div className="flex flex-col justify-between h-full py-12 w-full">
               <span className="text-xs font-medium text-gray-600 transform -rotate-90 whitespace-nowrap" style={{ transformOrigin: 'center', margin: 'auto' }}>
-                High perceived value
+                Important
               </span>
               <span className="text-xs font-medium text-gray-600 transform -rotate-90 whitespace-nowrap" style={{ transformOrigin: 'center', margin: 'auto' }}>
-                ↑ Perceived value ↓
+                ↑ Importance ↓
               </span>
               <span className="text-xs font-medium text-gray-600 transform -rotate-90 whitespace-nowrap" style={{ transformOrigin: 'center', margin: 'auto' }}>
-                Low perceived value
+                Unimportant
               </span>
             </div>
           </div>
