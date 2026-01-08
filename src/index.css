@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    font-family: Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    color: #0b0c0c;
+    background-color: #ffffff;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    --color-gds-blue: #1d70b8;
+    --color-gds-blue-light: #5694ca;
+    --color-gds-black: #0b0c0c;
+    --color-gds-grey: #b1b4b6;
+    --color-gds-light-grey: #f3f2f1;
+    --color-category-service: #1d70b8;
+    --color-category-product: #5694ca;
+    --color-category-users: #00703c;
+    --color-category-business: #912b88;
+    --color-category-market: #f47738;
+    --color-category-technology: #d4351c;
+    --color-category-delivery: #ffdd00;
+    --color-category-stakeholders: #4c2c92;
+    --color-risk-low: #d1fae5;
+    --color-risk-medium: #fef3c7;
+    --color-risk-high: #fee2e2;
+    --color-quadrant-priority: #fff4e6;
+    --color-quadrant-validate: #e6f7ff;
+    --color-quadrant-defer: #f5f5f5;
+    --color-quadrant-document: #f0f0f0;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-[--color-gds-blue] text-white px-4 py-2 rounded hover:bg-[--color-gds-blue-light] transition-colors font-medium;
+  }
+
+  .btn-secondary {
+    @apply bg-[--color-gds-light-grey] text-[--color-gds-black] px-4 py-2 rounded hover:bg-[--color-gds-grey] transition-colors font-medium;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 border border-[--color-gds-grey] rounded focus:outline-none focus:ring-2 focus:ring-[--color-gds-blue];
+  }
+
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50;
+  }
+
+  .modal-content {
+    @apply bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto;
+  }
+
+  .bg-gds-blue { background-color: var(--color-gds-blue); }
+  .bg-gds-blue-light { background-color: var(--color-gds-blue-light); }
+  .bg-gds-light-grey { background-color: var(--color-gds-light-grey); }
+  .bg-gds-grey { background-color: var(--color-gds-grey); }
+  .text-gds-black { color: var(--color-gds-black); }
+  .text-gds-blue { color: var(--color-gds-blue); }
+  .border-gds-grey { border-color: var(--color-gds-grey); }
+  .bg-risk-low { background-color: var(--color-risk-low); }
+  .bg-risk-medium { background-color: var(--color-risk-medium); }
+  .bg-risk-high { background-color: var(--color-risk-high); }
+  .bg-quadrant-priority { background-color: var(--color-quadrant-priority); }
+  .bg-quadrant-validate { background-color: var(--color-quadrant-validate); }
+  .bg-quadrant-defer { background-color: var(--color-quadrant-defer); }
+  .bg-quadrant-document { background-color: var(--color-quadrant-document); }
+}
