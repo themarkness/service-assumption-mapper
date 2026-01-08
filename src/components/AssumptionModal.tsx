@@ -22,14 +22,24 @@ export const AssumptionModal: React.FC = () => {
   });
 
   useEffect(() => {
-    if (editingAssumption) {
+    // Only pre-fill form if we're editing an existing assumption with an ID
+    if (editingAssumption && editingAssumption.id) {
       setFormData({
         text: editingAssumption.text,
         category: editingAssumption.category,
         consequence: editingAssumption.consequence || '',
         existingKnowledge: editingAssumption.existingKnowledge || '',
       });
+    } else if (editingAssumption && editingAssumption.category) {
+      // New assumption with pre-selected category
+      setFormData({
+        text: '',
+        category: editingAssumption.category,
+        consequence: '',
+        existingKnowledge: '',
+      });
     } else {
+      // Completely new assumption
       setFormData({
         text: '',
         category: 'service',
@@ -44,12 +54,14 @@ export const AssumptionModal: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (editingAssumption) {
+    // Check if we're editing an existing assumption (has a real ID)
+    if (editingAssumption && editingAssumption.id) {
       updateAssumption({
         ...editingAssumption,
         ...formData,
       });
     } else {
+      // Creating a new assumption
       if (!currentProjectId) return;
       createAssumption({
         ...formData,
