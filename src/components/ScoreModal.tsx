@@ -95,7 +95,7 @@ export const ScoreModal: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gds-black mb-2">
-                  Evidence - How much evidence do we have to support this? ({formData.confidence}/10)
+                  Confidence - How confident are we that this assumption is correct? ({formData.confidence}/10)
                 </label>
                 <input
                   type="range"
@@ -108,8 +108,8 @@ export const ScoreModal: React.FC = () => {
                   className="w-full h-2 bg-gds-light-grey rounded-lg appearance-none cursor-pointer"
                 />
                 <div className="flex justify-between text-xs text-gray-600 mt-1">
-                  <span>Low evidence (1)</span>
-                  <span>High evidence (10)</span>
+                  <span>Low confidence (1)</span>
+                  <span>High confidence (10)</span>
                 </div>
               </div>
 
@@ -137,10 +137,10 @@ export const ScoreModal: React.FC = () => {
                   </span>
                 </p>
                 <p className="text-xs text-gray-600 mt-1">
-                  Risk = Impact × (10 - Evidence)
+                  Risk = Impact × (10 - Confidence)
                 </p>
                 <p className="text-xs text-gray-500 mt-1 italic">
-                  Higher impact + lower evidence = higher risk to validate
+                  Higher impact + lower confidence = higher risk to validate
                 </p>
               </div>
             </div>
