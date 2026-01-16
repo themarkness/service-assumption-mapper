@@ -95,6 +95,11 @@ export const GridView: React.FC = () => {
     setDraggingId(id);
   };
 
+  // Prevent canvas panning when interacting with cards
+  const handleCardMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <div className="p-6 h-full">
       <div className="bg-white rounded shadow-md p-6 h-[calc(100vh-200px)] relative overflow-hidden">
@@ -236,6 +241,8 @@ export const GridView: React.FC = () => {
                             className={`absolute w-64 pointer-events-auto cursor-move ${
                               draggingId === assumption.id ? 'opacity-70 scale-105' : ''
                             } transition-all`}
+                            onMouseDown={handleCardMouseDown}
+                            onTouchStart={handleCardMouseDown}
                           >
                             <AssumptionCard assumption={assumption} />
                           </div>
