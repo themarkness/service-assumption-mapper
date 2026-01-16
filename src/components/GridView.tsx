@@ -10,11 +10,20 @@ export const GridView: React.FC = () => {
   const { assumptions, currentProjectId, updateAssumption } = useStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const cardRefs = useRef<Map<string, React.RefObject<HTMLDivElement | null>>>(new Map());
 
   const projectAssumptions = assumptions
     .filter((a) => a.projectId === currentProjectId)
     .map(addCalculations)
     .filter((a) => a.scores.length > 0); // Only show scored assumptions
+
+  // Get or create ref for a card
+  const getCardRef = (id: string) => {
+    if (!cardRefs.current.has(id)) {
+      cardRefs.current.set(id, React.createRef<HTMLDivElement>());
+    }
+    return cardRefs.current.get(id)!;
+  };
 
   // Calculate position for each assumption
   const getPosition = (assumption: AssumptionWithCalculations) => {
@@ -212,15 +221,19 @@ export const GridView: React.FC = () => {
                       const xPixels = (clampedX / 100) * containerWidth - cardWidth / 2;
                       const yPixels = (clampedY / 100) * containerHeight - 128; // approximate card height/2
 
+                      const nodeRef = getCardRef(assumption.id);
+
                       return (
                         <Draggable
                           key={assumption.id}
+                          nodeRef={nodeRef}
                           position={{ x: xPixels, y: yPixels }}
                           onStart={() => handleDragStart(assumption.id)}
                           onStop={(e, data) => handleDragStop(assumption, e, data)}
                           bounds="parent"
                         >
                           <div
+                            ref={nodeRef}
                             className={`absolute w-64 pointer-events-auto cursor-move ${
                               draggingId === assumption.id ? 'opacity-70 scale-105' : ''
                             } transition-all`}
