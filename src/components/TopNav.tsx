@@ -45,17 +45,25 @@ export const TopNav: React.FC = () => {
       <div className="max-w-full px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Left side - Project info */}
-          <div className="flex-1">
-            <h1
-              className="text-xl font-bold cursor-pointer hover:underline"
-              onClick={openProjectModal}
-              title="Edit project details"
+          <div className="flex-1 flex items-center gap-4">
+            <button
+              onClick={() => setViewMode('projects')}
+              className="bg-white/10 text-white px-4 py-2 rounded font-medium hover:bg-white/20 transition-colors text-sm"
             >
-              {currentProject.name}
-            </h1>
-            <p className="text-sm text-blue-100">
-              {currentProject.team} • {currentProject.phase} • {currentProject.date}
-            </p>
+              ← Projects
+            </button>
+            <div>
+              <h1
+                className="text-xl font-bold cursor-pointer hover:underline"
+                onClick={openProjectModal}
+                title="Edit project details"
+              >
+                {currentProject.name}
+              </h1>
+              <p className="text-sm text-blue-100">
+                {currentProject.team} • {currentProject.phase} • {currentProject.date}
+              </p>
+            </div>
           </div>
 
           {/* Center - View toggle */}

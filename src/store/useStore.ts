@@ -105,7 +105,7 @@ export const useStore = create<AppState>((set, get) => ({
     };
     saveProjectToStorage(project);
     const projects = loadProjects();
-    set({ projects, currentProjectId: project.id });
+    set({ projects, currentProjectId: project.id, viewMode: 'category' });
     setCurrentProject(project.id);
   },
 
