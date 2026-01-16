@@ -95,11 +95,6 @@ export const GridView: React.FC = () => {
     setDraggingId(id);
   };
 
-  // Prevent canvas panning when interacting with cards
-  const handleCardMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation();
-  };
-
   return (
     <div className="p-6 h-full">
       <div className="bg-white rounded shadow-md p-6 h-[calc(100vh-200px)] relative overflow-hidden">
@@ -116,7 +111,7 @@ export const GridView: React.FC = () => {
           wheel={{ step: 0.1 }}
           pinch={{ step: 5 }}
           doubleClick={{ disabled: true }}
-          panning={{ disabled: false }}
+          panning={{ disabled: draggingId !== null }}
         >
           {({ zoomIn, zoomOut, resetTransform }) => (
             <>
@@ -150,13 +145,13 @@ export const GridView: React.FC = () => {
                 contentStyle={{ width: '100%', height: '100%' }}
               >
                 <div className="relative w-full h-full">
-                  {/* Grid container - fills entire canvas */}
+                  {/* Grid container - fills entire canvas with NO gaps */}
                   <div
                     ref={containerRef}
-                    className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-1"
+                    className="absolute inset-0 grid grid-cols-2 grid-rows-2"
                   >
                     {/* Top-left: Validate (Low evidence + Important) */}
-                    <div className="bg-quadrant-validate border-2 border-blue-300 rounded-tl p-4 relative">
+                    <div className="bg-quadrant-validate border border-blue-300 p-4 relative">
                       <h3 className="font-bold text-sm mb-2">Validate</h3>
                       <p className="text-xs text-gray-600 leading-relaxed">
                         These assumptions have promise of a big return but pose risk. Focus our testing and learning here.
@@ -164,7 +159,7 @@ export const GridView: React.FC = () => {
                     </div>
 
                     {/* Top-right: Build it (High evidence + Important) */}
-                    <div className="bg-quadrant-priority border-2 border-orange-300 rounded-tr p-4 relative">
+                    <div className="bg-quadrant-priority border border-orange-300 p-4 relative">
                       <h3 className="font-bold text-sm mb-2">Build it</h3>
                       <p className="text-xs text-gray-600 leading-relaxed">
                         We have high confidence that these will deliver customer value. Don't spend discovery cycles here.
@@ -172,7 +167,7 @@ export const GridView: React.FC = () => {
                     </div>
 
                     {/* Bottom-left: Discard (Low evidence + Unimportant) */}
-                    <div className="bg-quadrant-defer border-2 border-gray-300 rounded-bl p-4 relative">
+                    <div className="bg-quadrant-defer border border-gray-300 p-4 relative">
                       <h3 className="font-bold text-sm mb-2">Discard</h3>
                       <p className="text-xs text-gray-600 leading-relaxed">
                         We don't have much confidence around this, but at the same time it's not important. Don't waste time here.
@@ -180,7 +175,7 @@ export const GridView: React.FC = () => {
                     </div>
 
                     {/* Bottom-right: Don't test. Usually don't build (High evidence + Unimportant) */}
-                    <div className="bg-quadrant-document border-2 border-gray-400 rounded-br p-4 relative">
+                    <div className="bg-quadrant-document border border-gray-400 p-4 relative">
                       <h3 className="font-bold text-sm mb-2">Don't test. Usually don't build</h3>
                       <p className="text-xs text-gray-600 leading-relaxed">
                         Not impactful to users, but sometimes table stakes business functionality ends up here.
@@ -241,8 +236,6 @@ export const GridView: React.FC = () => {
                             className={`absolute w-64 pointer-events-auto cursor-move ${
                               draggingId === assumption.id ? 'opacity-70 scale-105' : ''
                             } transition-all`}
-                            onMouseDown={handleCardMouseDown}
-                            onTouchStart={handleCardMouseDown}
                           >
                             <AssumptionCard assumption={assumption} />
                           </div>
