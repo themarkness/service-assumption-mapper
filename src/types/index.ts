@@ -49,7 +49,7 @@ export interface AssumptionWithCalculations extends Assumption {
   riskScore: number; // importance × (10 - confidence)
 }
 
-export type ViewMode = 'category' | 'grid';
+export type ViewMode = 'category' | 'grid' | 'projects';
 
 export const CATEGORY_LABELS: Record<AssumptionCategory, string> = {
   service: 'Service',

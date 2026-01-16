@@ -7,15 +7,17 @@ import { AssumptionModal } from './components/AssumptionModal';
 import { ScoreModal } from './components/ScoreModal';
 import { CategoryView } from './components/CategoryView';
 import { GridView } from './components/GridView';
+import { ProjectsPage } from './components/ProjectsPage';
 
 function App() {
-  const { loadData, currentProjectId, viewMode } = useStore();
+  const { loadData, currentProjectId, viewMode, projects } = useStore();
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  if (!currentProjectId) {
+  // If no projects exist at all, show welcome screen
+  if (projects.length === 0) {
     return (
       <>
         <WelcomeScreen />
@@ -24,6 +26,27 @@ function App() {
     );
   }
 
+  // If viewing projects list
+  if (viewMode === 'projects') {
+    return (
+      <>
+        <ProjectsPage />
+        <ProjectModal />
+      </>
+    );
+  }
+
+  // If no current project selected but projects exist, show projects page
+  if (!currentProjectId) {
+    return (
+      <>
+        <ProjectsPage />
+        <ProjectModal />
+      </>
+    );
+  }
+
+  // Main app view with current project
   return (
     <div className="min-h-screen bg-gds-light-grey">
       <TopNav />
