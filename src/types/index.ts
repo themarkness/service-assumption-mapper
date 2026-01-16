@@ -63,14 +63,14 @@ export const CATEGORY_LABELS: Record<AssumptionCategory, string> = {
 };
 
 export const CATEGORY_DESCRIPTIONS: Record<AssumptionCategory, string> = {
-  service: 'How the end-to-end service works across touchpoints',
-  product: 'Specific digital product features and MVP scope',
-  users: 'Who uses the service and their needs, behaviours, contexts',
-  business_case: 'Costs, benefits, ROI, and demonstrating value',
-  market: 'Demand, scale of problem, existing alternatives',
-  technology: 'Technical feasibility, stack, integrations, capabilities',
-  delivery: 'Team skills, ways of working, dependencies',
-  stakeholders: 'Political support, departmental buy-in, policy requirements',
+  service: 'The end-to-end journey works, users can complete their goal, online and offline touchpoints connect seamlessly',
+  product: 'The features solve the problem, users can complete core tasks, the MVP is viable and can evolve',
+  users: 'They need this, they can use it, they can access it, they understand what to do',
+  business_case: 'It\'s worth the investment, it will deliver savings, we can evidence the value',
+  market: 'There\'s demand at scale, it\'s different from alternatives, people will adopt it',
+  technology: 'We can build it, it will integrate with existing systems, it meets security requirements',
+  delivery: 'The team can deliver it with the capacity they have, we can prioritise the work, we can take lean, agile approaches as necessary',
+  stakeholders: 'We have political buy-in, departments will align, policy and legal requirements are met',
 };
 
 export const CATEGORY_COLORS: Record<AssumptionCategory, string> = {
