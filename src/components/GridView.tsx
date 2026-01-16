@@ -97,7 +97,7 @@ export const GridView: React.FC = () => {
 
   return (
     <div className="p-6 h-full">
-      <div className="bg-white rounded shadow-md p-6 h-[calc(100vh-200px)] relative">
+      <div className="bg-white rounded shadow-md p-6 h-[calc(100vh-200px)] relative overflow-hidden">
         {/* Zoom controls hint */}
         <div className="absolute top-2 right-2 text-xs text-gray-500 bg-white/80 px-3 py-1 rounded shadow z-10">
           Scroll to zoom • Drag canvas to pan • Drag cards to reposition
@@ -144,15 +144,14 @@ export const GridView: React.FC = () => {
                 wrapperStyle={{ width: '100%', height: '100%' }}
                 contentStyle={{ width: '100%', height: '100%' }}
               >
-                <div className="relative w-full h-full" style={{ paddingLeft: '50px', paddingBottom: '30px' }}>
-                  {/* Grid container */}
+                <div className="relative w-full h-full">
+                  {/* Grid container - fills entire canvas */}
                   <div
                     ref={containerRef}
-                    className="absolute grid grid-cols-2 grid-rows-2 gap-1"
-                    style={{ left: '50px', right: '0', top: '0', bottom: '30px' }}
+                    className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-1"
                   >
                     {/* Top-left: Validate (Low evidence + Important) */}
-                    <div className="bg-quadrant-validate border-2 border-blue-300 rounded-tl p-4">
+                    <div className="bg-quadrant-validate border-2 border-blue-300 rounded-tl p-4 relative">
                       <h3 className="font-bold text-sm mb-2">Validate</h3>
                       <p className="text-xs text-gray-600 leading-relaxed">
                         These assumptions have promise of a big return but pose risk. Focus our testing and learning here.
@@ -160,7 +159,7 @@ export const GridView: React.FC = () => {
                     </div>
 
                     {/* Top-right: Build it (High evidence + Important) */}
-                    <div className="bg-quadrant-priority border-2 border-orange-300 rounded-tr p-4">
+                    <div className="bg-quadrant-priority border-2 border-orange-300 rounded-tr p-4 relative">
                       <h3 className="font-bold text-sm mb-2">Build it</h3>
                       <p className="text-xs text-gray-600 leading-relaxed">
                         We have high confidence that these will deliver customer value. Don't spend discovery cycles here.
@@ -168,7 +167,7 @@ export const GridView: React.FC = () => {
                     </div>
 
                     {/* Bottom-left: Discard (Low evidence + Unimportant) */}
-                    <div className="bg-quadrant-defer border-2 border-gray-300 rounded-bl p-4">
+                    <div className="bg-quadrant-defer border-2 border-gray-300 rounded-bl p-4 relative">
                       <h3 className="font-bold text-sm mb-2">Discard</h3>
                       <p className="text-xs text-gray-600 leading-relaxed">
                         We don't have much confidence around this, but at the same time it's not important. Don't waste time here.
@@ -176,7 +175,7 @@ export const GridView: React.FC = () => {
                     </div>
 
                     {/* Bottom-right: Don't test. Usually don't build (High evidence + Unimportant) */}
-                    <div className="bg-quadrant-document border-2 border-gray-400 rounded-br p-4">
+                    <div className="bg-quadrant-document border-2 border-gray-400 rounded-br p-4 relative">
                       <h3 className="font-bold text-sm mb-2">Don't test. Usually don't build</h3>
                       <p className="text-xs text-gray-600 leading-relaxed">
                         Not impactful to users, but sometimes table stakes business functionality ends up here.
@@ -184,29 +183,29 @@ export const GridView: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Axis labels */}
-                  <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs font-medium text-gray-600 pb-1 px-12">
-                    <span>Low evidence</span>
-                    <span>← Evidence →</span>
-                    <span>High evidence</span>
+                  {/* Axis labels - overlayed on quadrants */}
+                  <div className="absolute bottom-2 left-0 right-0 flex justify-between text-xs font-medium text-gray-700 px-6 pointer-events-none">
+                    <span className="bg-white/70 px-2 py-1 rounded">Low evidence</span>
+                    <span className="bg-white/70 px-2 py-1 rounded">← Evidence →</span>
+                    <span className="bg-white/70 px-2 py-1 rounded">High evidence</span>
                   </div>
 
-                  <div className="absolute top-0 bottom-0 left-0 flex items-center" style={{ width: '40px' }}>
-                    <div className="flex flex-col justify-between h-full py-12 w-full">
-                      <span className="text-xs font-medium text-gray-600 transform -rotate-90 whitespace-nowrap" style={{ transformOrigin: 'center', margin: 'auto' }}>
+                  <div className="absolute top-0 bottom-0 left-2 flex items-center pointer-events-none">
+                    <div className="flex flex-col justify-between h-full py-6">
+                      <span className="text-xs font-medium text-gray-700 transform -rotate-90 whitespace-nowrap bg-white/70 px-2 py-1 rounded">
                         Important
                       </span>
-                      <span className="text-xs font-medium text-gray-600 transform -rotate-90 whitespace-nowrap" style={{ transformOrigin: 'center', margin: 'auto' }}>
+                      <span className="text-xs font-medium text-gray-700 transform -rotate-90 whitespace-nowrap bg-white/70 px-2 py-1 rounded">
                         ↑ Importance ↓
                       </span>
-                      <span className="text-xs font-medium text-gray-600 transform -rotate-90 whitespace-nowrap" style={{ transformOrigin: 'center', margin: 'auto' }}>
+                      <span className="text-xs font-medium text-gray-700 transform -rotate-90 whitespace-nowrap bg-white/70 px-2 py-1 rounded">
                         Unimportant
                       </span>
                     </div>
                   </div>
 
                   {/* Assumption cards positioned on grid */}
-                  <div className="absolute pointer-events-none" style={{ left: '50px', right: '0', top: '0', bottom: '30px' }}>
+                  <div className="absolute inset-0 pointer-events-none">
                     {projectAssumptions.map((assumption) => {
                       const pos = getPosition(assumption);
                       const clampedX = Math.max(5, Math.min(pos.x, 85));
