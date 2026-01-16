@@ -100,12 +100,12 @@ export const GridView: React.FC = () => {
       <div className="bg-white rounded shadow-md p-6 h-[calc(100vh-200px)] relative overflow-hidden">
         {/* Zoom controls hint */}
         <div className="absolute top-2 right-2 text-xs text-gray-500 bg-white/80 px-3 py-1 rounded shadow z-10">
-          Scroll to zoom • Drag canvas to pan • Drag cards to reposition
+          Scroll to zoom in • Drag canvas to pan • Drag cards to reposition
         </div>
 
         <TransformWrapper
           initialScale={1}
-          minScale={0.5}
+          minScale={1}
           maxScale={3}
           centerOnInit={true}
           wheel={{ step: 0.1 }}
