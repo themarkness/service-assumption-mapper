@@ -14,8 +14,7 @@ export const GridView: React.FC = () => {
 
   const projectAssumptions = assumptions
     .filter((a) => a.projectId === currentProjectId)
-    .map(addCalculations)
-    .filter((a) => a.scores.length > 0); // Only show scored assumptions
+    .map(addCalculations);
 
   // Get or create ref for a card
   const getCardRef = (id: string) => {
@@ -29,6 +28,11 @@ export const GridView: React.FC = () => {
   const getPosition = (assumption: AssumptionWithCalculations) => {
     if (assumption.manualPosition) {
       return assumption.manualPosition;
+    }
+
+    // Unscored assumptions default to centre — user can drag them into place
+    if (assumption.scores.length === 0) {
+      return { x: 50, y: 50 };
     }
 
     // X-axis: Evidence (1-10 scale)
@@ -248,9 +252,9 @@ export const GridView: React.FC = () => {
                   {projectAssumptions.length === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="text-center text-gray-500">
-                        <p className="text-lg font-medium">No scored assumptions yet</p>
+                        <p className="text-lg font-medium">No assumptions yet</p>
                         <p className="text-sm mt-2">
-                          Add scores to assumptions to see them positioned on the grid
+                          Add assumptions in the category view to see them here
                         </p>
                       </div>
                     </div>

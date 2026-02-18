@@ -1,3 +1,8 @@
+---
+description: 
+alwaysApply: true
+---
+
 # CLAUDE.md — Service Assumption Mapper
 
 This file gives Claude and other AI agents the context needed to work effectively on this codebase.
