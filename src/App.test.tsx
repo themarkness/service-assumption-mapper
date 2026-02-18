@@ -1,16 +1,27 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import App from './App';
 import { useStore } from './store/useStore';
-import {
-  saveProject,
-  setCurrentProject as setCurrentProjectStorage,
-} from './utils/storage';
 import type { Project } from './types';
+
+// Mock useSessionSync so it does not attempt Firestore connections in tests
+vi.mock('./hooks/useSessionSync', () => ({
+  useSessionSync: vi.fn(),
+}));
+
+// Mock Firestore storage so store actions resolve cleanly in tests
+vi.mock('./utils/firestoreStorage', () => ({
+  saveSession: vi.fn().mockResolvedValue(undefined),
+  getSession: vi.fn().mockResolvedValue(null),
+  deleteSession: vi.fn().mockResolvedValue(undefined),
+  saveAssumption: vi.fn().mockResolvedValue(undefined),
+  deleteAssumption: vi.fn().mockResolvedValue(undefined),
+  getAssumptions: vi.fn().mockResolvedValue([]),
+}));
 
 function makeProject(overrides: Partial<Project> = {}): Project {
   return {
-    id: 'proj-1',
+    id: 'test-session',
     name: 'Test Project',
     team: 'Alpha Team',
     phase: 'Discovery',
@@ -28,6 +39,7 @@ function resetStore(overrides = {}) {
     currentProjectId: null,
     userName: null,
     viewMode: 'category',
+    isSessionLoading: false,
     isProjectModalOpen: false,
     isAssumptionModalOpen: false,
     isScoreModalOpen: false,
@@ -39,65 +51,60 @@ function resetStore(overrides = {}) {
 
 beforeEach(() => {
   resetStore();
-  // localStorage is cleared by the global setup
+  // Reset to home route before each test
+  window.location.hash = '';
 });
 
-/**
- * App calls loadData() on mount, which reads from localStorage.
- * So we seed both localStorage AND the store to keep them in sync.
- */
-function seedProject(project: Project, viewMode: 'category' | 'grid' | 'projects' = 'category') {
-  // Seed localStorage so loadData() reads correct data
-  saveProject(project);
-  setCurrentProjectStorage(project.id);
-  // Seed store so first render shows correct state before effect runs
-  useStore.setState({ projects: [project], currentProjectId: project.id, viewMode });
-}
-
 describe('App routing', () => {
-  it('shows WelcomeScreen when no projects exist', () => {
-    // Nothing in localStorage → loadData will return empty arrays
+  it('shows WelcomeScreen at the home route', () => {
     render(<App />);
     expect(
       screen.getByText('Government Service Assumptions Mapping Tool')
     ).toBeInTheDocument();
   });
 
-  it('shows ProjectsPage when viewMode is "projects"', () => {
-    const project = makeProject();
-    seedProject(project, 'projects');
+  it('renders the ProjectModal when isProjectModalOpen is true at home route', () => {
+    useStore.setState({ isProjectModalOpen: true });
     render(<App />);
-    expect(screen.getByRole('heading', { name: 'Your Projects' })).toBeInTheDocument();
+    expect(screen.getByText('Create New Session')).toBeInTheDocument();
   });
 
-  it('shows ProjectsPage when projects exist but no current project is selected', () => {
-    const project = makeProject();
-    saveProject(project);
-    // No current project set in storage
-    useStore.setState({ projects: [project], currentProjectId: null, viewMode: 'category' });
+  it('shows JoinSessionPage at a session route when no user name is set', () => {
+    window.location.hash = '#/session/abc123';
     render(<App />);
-    expect(screen.getByRole('heading', { name: 'Your Projects' })).toBeInTheDocument();
+    expect(screen.getByText(/join session/i)).toBeInTheDocument();
   });
 
-  it('shows TopNav with project name when a current project is selected', () => {
-    const project = makeProject({ name: 'My RAT Project' });
-    seedProject(project, 'category');
+  it('shows loading state at session route when userName is set but session not yet loaded', () => {
+    window.location.hash = '#/session/abc123';
+    resetStore({ userName: 'Alice' });
     render(<App />);
-    // TopNav renders the project name as a clickable heading
-    expect(screen.getByText('My RAT Project')).toBeInTheDocument();
+    expect(screen.getByText(/loading session/i)).toBeInTheDocument();
   });
 
-  it('renders CategoryView in category viewMode (shows category column headings)', () => {
-    const project = makeProject();
-    seedProject(project, 'category');
+  it('shows TopNav with project name when session route is active and project is loaded', () => {
+    const project = makeProject({ id: 'abc123' });
+    window.location.hash = '#/session/abc123';
+    resetStore({
+      userName: 'Alice',
+      projects: [project],
+      currentProjectId: project.id,
+      viewMode: 'category',
+    });
     render(<App />);
-    // CategoryView renders column headings for each assumption category
+    expect(screen.getByText('Test Project')).toBeInTheDocument();
+  });
+
+  it('renders CategoryView column headings when session view is active', () => {
+    const project = makeProject({ id: 'abc123' });
+    window.location.hash = '#/session/abc123';
+    resetStore({
+      userName: 'Alice',
+      projects: [project],
+      currentProjectId: project.id,
+      viewMode: 'category',
+    });
+    render(<App />);
     expect(screen.getByText('Service')).toBeInTheDocument();
-  });
-
-  it('renders the ProjectModal when isProjectModalOpen is true on WelcomeScreen', () => {
-    useStore.setState({ projects: [], isProjectModalOpen: true });
-    render(<App />);
-    expect(screen.getByText('Create New Project')).toBeInTheDocument();
   });
 });

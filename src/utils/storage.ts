@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
   PROJECTS: 'rat_projects',
   ASSUMPTIONS: 'rat_assumptions',
   CURRENT_PROJECT: 'rat_current_project',
+  CURRENT_SESSION: 'rat_current_session',
   USER_NAME: 'rat_user_name',
 };
 
@@ -82,6 +83,15 @@ export function saveUserName(name: string): void {
 
 export function loadUserName(): string | null {
   return localStorage.getItem(STORAGE_KEYS.USER_NAME);
+}
+
+// Current Session (for Firestore-backed sessions)
+export function saveCurrentSession(sessionId: string): void {
+  localStorage.setItem(STORAGE_KEYS.CURRENT_SESSION, sessionId);
+}
+
+export function loadCurrentSession(): string | null {
+  return localStorage.getItem(STORAGE_KEYS.CURRENT_SESSION);
 }
 
 // Utility to generate unique IDs

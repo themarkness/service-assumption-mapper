@@ -113,6 +113,16 @@ export const AssumptionCard: React.FC<AssumptionCardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Attribution */}
+      <div className="mt-1 ml-2 text-xs text-gray-400">
+        {assumption.createdBy && (
+          <span>by {assumption.createdBy}</span>
+        )}
+        {assumption.updatedBy && assumption.updatedBy !== assumption.createdBy && (
+          <span className="ml-1">· edited by {assumption.updatedBy}</span>
+        )}
+      </div>
     </div>
   );
 };

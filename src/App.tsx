@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
+import { HashRouter, Routes, Route, useParams, useNavigate } from 'react-router-dom';
 import { useStore } from './store/useStore';
+import { useSessionSync } from './hooks/useSessionSync';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { TopNav } from './components/TopNav';
 import { ProjectModal } from './components/ProjectModal';
@@ -7,59 +9,70 @@ import { AssumptionModal } from './components/AssumptionModal';
 import { ScoreModal } from './components/ScoreModal';
 import { CategoryView } from './components/CategoryView';
 import { GridView } from './components/GridView';
-import { ProjectsPage } from './components/ProjectsPage';
+import { JoinSessionPage } from './components/JoinSessionPage';
+import { SessionBanner } from './components/SessionBanner';
 
-function App() {
-  const { loadData, currentProjectId, viewMode, projects } = useStore();
+/** Renders the session workspace for a given sessionId URL param. */
+function SessionView() {
+  const { sessionId } = useParams<{ sessionId: string }>();
+  const { userName, viewMode, currentProjectId } = useStore();
+
+  // Subscribe to real-time Firestore updates for this session
+  useSessionSync(sessionId);
+
+  // If no name yet, prompt for it before showing the session
+  if (!userName) {
+    return <JoinSessionPage sessionId={sessionId!} />;
+  }
+
+  // Project not yet loaded from Firestore (first render)
+  if (!currentProjectId) {
+    return (
+      <div className="min-h-screen bg-gds-light-grey flex items-center justify-center">
+        <p className="text-gray-600">Loading session…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gds-light-grey">
+      <SessionBanner />
+      <TopNav />
+      <main className="h-[calc(100vh-140px)]">
+        {viewMode === 'category' ? <CategoryView /> : <GridView />}
+      </main>
+      <ProjectModal />
+      <AssumptionModal />
+      <ScoreModal />
+    </div>
+  );
+}
+
+/** Home view — enter name, create a new session, or follow an invite link. */
+function HomeView() {
+  const { loadData } = useStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // If no projects exist at all, show welcome screen
-  if (projects.length === 0) {
-    return (
-      <>
-        <WelcomeScreen />
-        <ProjectModal />
-      </>
-    );
-  }
-
-  // If viewing projects list
-  if (viewMode === 'projects') {
-    return (
-      <>
-        <ProjectsPage />
-        <ProjectModal />
-      </>
-    );
-  }
-
-  // If no current project selected but projects exist, show projects page
-  if (!currentProjectId) {
-    return (
-      <>
-        <ProjectsPage />
-        <ProjectModal />
-      </>
-    );
-  }
-
-  // Main app view with current project
   return (
-    <div className="min-h-screen bg-gds-light-grey">
-      <TopNav />
+    <>
+      <WelcomeScreen />
+      <ProjectModal onCreated={(id) => navigate(`/session/${id}`)} />
+    </>
+  );
+}
 
-      <main className="h-[calc(100vh-100px)]">
-        {viewMode === 'category' ? <CategoryView /> : <GridView />}
-      </main>
-
-      {/* Modals */}
-      <ProjectModal />
-      <AssumptionModal />
-      <ScoreModal />
-    </div>
+function App() {
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<HomeView />} />
+        <Route path="/session/:sessionId" element={<SessionView />} />
+      </Routes>
+    </HashRouter>
   );
 }
 

@@ -14,6 +14,7 @@ function resetStore() {
     currentProjectId: null,
     userName: null,
     viewMode: 'category',
+    isSessionLoading: false,
     isProjectModalOpen: false,
     isAssumptionModalOpen: false,
     isScoreModalOpen: false,
@@ -37,7 +38,7 @@ function makeProjectData(): Omit<Project, 'id' | 'createdAt' | 'updatedAt'> {
 
 function makeAssumptionData(
   projectId = 'proj-1'
-): Omit<Assumption, 'id' | 'createdAt' | 'updatedAt'> {
+): Omit<Assumption, 'id' | 'createdAt' | 'updatedAt' | 'updatedBy'> {
   return {
     projectId,
     text: 'Users will adopt the service',
@@ -158,12 +159,13 @@ describe('deleteProject', () => {
     expect(getState().currentProjectId).toBeNull();
   });
 
-  it('selects the first remaining project after deletion', () => {
+  it('sets currentProjectId to null when the current project is deleted', () => {
     getState().createProject(makeProjectData());
     getState().createProject({ ...makeProjectData(), name: 'Second' });
     const firstId = getState().projects[0].id;
+    useStore.setState({ currentProjectId: firstId });
     getState().deleteProject(firstId);
-    expect(getState().currentProjectId).toBe(getState().projects[0].id);
+    expect(getState().currentProjectId).toBeNull();
   });
 });
 

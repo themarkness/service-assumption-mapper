@@ -1,17 +1,35 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 
 export const WelcomeScreen: React.FC = () => {
   const { userName, setUserName, openProjectModal } = useStore();
+  const navigate = useNavigate();
   const [nameInput, setNameInput] = useState(userName || '');
   const [showNameInput, setShowNameInput] = useState(!userName);
+  const [joinInput, setJoinInput] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleNameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (nameInput.trim()) {
       setUserName(nameInput.trim());
       setShowNameInput(false);
     }
+  };
+
+  const handleJoinSession = (e: React.FormEvent) => {
+    e.preventDefault();
+    const value = joinInput.trim();
+    if (!value) return;
+
+    // Accept full URL or bare session ID
+    const match = value.match(/\/session\/([^/#?]+)/);
+    const sessionId = match ? match[1] : value;
+    navigate(`/session/${sessionId}`);
+  };
+
+  const handleCreate = () => {
+    openProjectModal();
   };
 
   return (
@@ -28,7 +46,7 @@ export const WelcomeScreen: React.FC = () => {
         </p>
 
         {showNameInput ? (
-          <form onSubmit={handleSubmit} className="mb-6">
+          <form onSubmit={handleNameSubmit} className="mb-6">
             <label
               htmlFor="userName"
               className="block text-sm font-medium text-gds-black mb-2"
@@ -66,20 +84,59 @@ export const WelcomeScreen: React.FC = () => {
 
         {!showNameInput && (
           <>
-            <div className="mb-6">
+            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {/* Create session */}
+              <div className="border border-gray-200 rounded-lg p-5">
+                <h2 className="text-lg font-bold text-gds-black mb-2">
+                  Start a new session
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Create a shareable session and invite your team to collaborate.
+                </p>
+                <button
+                  onClick={handleCreate}
+                  className="btn-primary w-full"
+                  aria-label="Create session"
+                >
+                  Create session
+                </button>
+              </div>
+
+              {/* Join session */}
+              <div className="border border-gray-200 rounded-lg p-5">
+                <h2 className="text-lg font-bold text-gds-black mb-2">
+                  Join a session
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Paste an invite link or session ID to collaborate with others.
+                </p>
+                <form onSubmit={handleJoinSession} className="flex flex-col gap-2">
+                  <input
+                    type="text"
+                    value={joinInput}
+                    onChange={(e) => setJoinInput(e.target.value)}
+                    className="input-field"
+                    placeholder="Paste invite link or session ID"
+                    aria-label="Invite link or session ID"
+                  />
+                  <button type="submit" className="btn-primary">
+                    Join session
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div className="mb-4">
               <h2 className="text-xl font-bold text-gds-black mb-3">Getting Started</h2>
               <ol className="list-decimal list-inside space-y-2 text-gray-700">
-                <li>Create a project and fill in context (service name, team, phase)</li>
+                <li>Create a session and fill in context (service name, team, phase)</li>
+                <li>Share the invite link with your team</li>
                 <li>Add assumption cards in 8 categorized columns</li>
                 <li>Score each assumption for Importance and Confidence</li>
                 <li>View prioritization in Category or Grid view</li>
                 <li>Export results for documentation</li>
               </ol>
             </div>
-
-            <button onClick={openProjectModal} className="btn-primary w-full text-lg py-3">
-              Create Your First Project
-            </button>
           </>
         )}
 

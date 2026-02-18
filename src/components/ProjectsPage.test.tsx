@@ -25,6 +25,7 @@ function resetStore(overrides = {}) {
     currentProjectId: null,
     userName: null,
     viewMode: 'category',
+    isSessionLoading: false,
     isProjectModalOpen: false,
     isAssumptionModalOpen: false,
     isScoreModalOpen: false,

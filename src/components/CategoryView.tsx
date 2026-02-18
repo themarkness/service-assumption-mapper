@@ -89,6 +89,7 @@ const Column: React.FC<ColumnProps> = ({ category, assumptions }) => {
               category,
               scores: [],
               createdBy: '',
+              updatedBy: '',
               createdAt: 0,
               updatedAt: 0,
             })

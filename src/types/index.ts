@@ -29,6 +29,7 @@ export interface Assumption {
   notes?: string;
   manualPosition?: { x: number; y: number }; // For grid view overrides
   createdBy: string;
+  updatedBy: string;
   createdAt: number;
   updatedAt: number;
 }

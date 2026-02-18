@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { exportToCSV, exportToPDF, exportToJSON } from '../utils/export';
 import { addCalculations } from '../utils/calculations';
@@ -13,6 +14,7 @@ export const TopNav: React.FC = () => {
     openProjectModal,
     assumptions,
   } = useStore();
+  const navigate = useNavigate();
 
   const [showExportMenu, setShowExportMenu] = useState(false);
 
@@ -47,16 +49,16 @@ export const TopNav: React.FC = () => {
           {/* Left side - Project info */}
           <div className="flex-1 flex items-center gap-4">
             <button
-              onClick={() => setViewMode('projects')}
+              onClick={() => navigate('/')}
               className="bg-white/10 text-white px-4 py-2 rounded font-medium hover:bg-white/20 transition-colors text-sm"
             >
-              ← Projects
+              ← Home
             </button>
             <div>
               <h1
                 className="text-xl font-bold cursor-pointer hover:underline"
                 onClick={openProjectModal}
-                title="Edit project details"
+                title="Edit session details"
               >
                 {currentProject.name}
               </h1>

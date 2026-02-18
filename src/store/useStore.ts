@@ -1,18 +1,16 @@
 import { create } from 'zustand';
 import type { Project, Assumption, ViewMode, Score } from '../types';
 import {
-  loadProjects,
-  loadAssumptions,
-  saveProject as saveProjectToStorage,
-  saveAssumption as saveAssumptionToStorage,
-  deleteProject as deleteProjectFromStorage,
-  deleteAssumption as deleteAssumptionFromStorage,
-  getCurrentProjectId,
-  setCurrentProject,
   loadUserName,
   saveUserName,
   generateId,
 } from '../utils/storage';
+import {
+  saveSession,
+  deleteSession,
+  saveAssumption as saveAssumptionToFirestore,
+  deleteAssumption as deleteAssumptionFromFirestore,
+} from '../utils/firestoreStorage';
 
 interface AppState {
   // Data
@@ -21,6 +19,7 @@ interface AppState {
   currentProjectId: string | null;
   userName: string | null;
   viewMode: ViewMode;
+  isSessionLoading: boolean;
 
   // UI State
   isProjectModalOpen: boolean;
@@ -32,26 +31,34 @@ interface AppState {
   // Actions
   loadData: () => void;
   setUserName: (name: string) => void;
+  setSessionData: (data: { project?: Project; assumptions?: Assumption[] }) => void;
 
   // Project actions
   setCurrentProject: (projectId: string) => void;
-  createProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateProject: (project: Project) => void;
-  deleteProject: (projectId: string) => void;
+  createProject: (
+    project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>
+  ) => Promise<string>;
+  updateProject: (project: Project) => Promise<void>;
+  deleteProject: (projectId: string) => Promise<void>;
   openProjectModal: () => void;
   closeProjectModal: () => void;
 
   // Assumption actions
-  createAssumption: (assumption: Omit<Assumption, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateAssumption: (assumption: Assumption) => void;
-  deleteAssumption: (assumptionId: string) => void;
+  createAssumption: (
+    assumption: Omit<Assumption, 'id' | 'createdAt' | 'updatedAt' | 'updatedBy'>
+  ) => Promise<void>;
+  updateAssumption: (assumption: Assumption) => Promise<void>;
+  deleteAssumption: (assumptionId: string) => Promise<void>;
   openAssumptionModal: (assumption?: Assumption) => void;
   closeAssumptionModal: () => void;
 
   // Score actions
   openScoreModal: (assumption: Assumption) => void;
   closeScoreModal: () => void;
-  addScore: (assumptionId: string, score: Omit<Score, 'timestamp' | 'person'>) => void;
+  addScore: (
+    assumptionId: string,
+    score: Omit<Score, 'timestamp' | 'person'>
+  ) => Promise<void>;
 
   // View actions
   setViewMode: (mode: ViewMode) => void;
@@ -64,25 +71,17 @@ export const useStore = create<AppState>((set, get) => ({
   currentProjectId: null,
   userName: null,
   viewMode: 'category',
+  isSessionLoading: false,
   isProjectModalOpen: false,
   isAssumptionModalOpen: false,
   isScoreModalOpen: false,
   editingAssumption: null,
   scoringAssumption: null,
 
-  // Load data from localStorage
+  // Load only user name from localStorage on app init
   loadData: () => {
-    const projects = loadProjects();
-    const assumptions = loadAssumptions();
-    const currentProjectId = getCurrentProjectId();
     const userName = loadUserName();
-
-    set({
-      projects,
-      assumptions,
-      currentProjectId,
-      userName,
-    });
+    set({ userName });
   },
 
   setUserName: (name: string) => {
@@ -90,76 +89,153 @@ export const useStore = create<AppState>((set, get) => ({
     set({ userName: name });
   },
 
+  // Called by useSessionSync to push Firestore data into the store
+  setSessionData: ({ project, assumptions }) => {
+    set((state) => {
+      const updates: Partial<AppState> = { isSessionLoading: false };
+
+      if (project !== undefined) {
+        const existing = state.projects.find((p) => p.id === project.id);
+        if (existing) {
+          updates.projects = state.projects.map((p) =>
+            p.id === project.id ? project : p
+          );
+        } else {
+          updates.projects = [...state.projects, project];
+        }
+        updates.currentProjectId = project.id;
+      }
+
+      if (assumptions !== undefined) {
+        const sessionId = project?.id ?? state.currentProjectId;
+        if (sessionId) {
+          // Replace all assumptions for this session; keep others
+          const otherAssumptions = state.assumptions.filter(
+            (a) => a.projectId !== sessionId
+          );
+          updates.assumptions = [...otherAssumptions, ...assumptions];
+        }
+      }
+
+      return updates;
+    });
+  },
+
   // Project actions
   setCurrentProject: (projectId: string) => {
-    setCurrentProject(projectId);
     set({ currentProjectId: projectId });
   },
 
-  createProject: (projectData) => {
+  createProject: async (projectData) => {
     const project: Project = {
       ...projectData,
       id: generateId(),
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-    saveProjectToStorage(project);
-    const projects = loadProjects();
-    set({ projects, currentProjectId: project.id, viewMode: 'category' });
-    setCurrentProject(project.id);
+    // Optimistic update
+    set((state) => ({
+      projects: [...state.projects, project],
+      currentProjectId: project.id,
+      viewMode: 'category',
+    }));
+    try {
+      await saveSession(project);
+    } catch {
+      // Firestore write failed; in-memory state is already updated
+    }
+    return project.id;
   },
 
-  updateProject: (project) => {
-    const updatedProject = {
-      ...project,
-      updatedAt: Date.now(),
-    };
-    saveProjectToStorage(updatedProject);
-    const projects = loadProjects();
-    set({ projects });
+  updateProject: async (project) => {
+    const updatedProject = { ...project, updatedAt: Date.now() };
+    set((state) => ({
+      projects: state.projects.map((p) =>
+        p.id === updatedProject.id ? updatedProject : p
+      ),
+    }));
+    try {
+      await saveSession(updatedProject);
+    } catch {
+      // Firestore write failed; in-memory state is already updated
+    }
   },
 
-  deleteProject: (projectId) => {
-    deleteProjectFromStorage(projectId);
-    const projects = loadProjects();
-    const assumptions = loadAssumptions();
-    set({
-      projects,
-      assumptions,
-      currentProjectId: projects.length > 0 ? projects[0].id : null,
-    });
+  deleteProject: async (projectId) => {
+    set((state) => ({
+      projects: state.projects.filter((p) => p.id !== projectId),
+      assumptions: state.assumptions.filter((a) => a.projectId !== projectId),
+      currentProjectId:
+        state.currentProjectId === projectId ? null : state.currentProjectId,
+    }));
+    try {
+      await deleteSession(projectId);
+    } catch {
+      // Firestore write failed; in-memory state is already updated
+    }
   },
 
   openProjectModal: () => set({ isProjectModalOpen: true }),
   closeProjectModal: () => set({ isProjectModalOpen: false }),
 
   // Assumption actions
-  createAssumption: (assumptionData) => {
+  createAssumption: async (assumptionData) => {
+    const userName = get().userName || 'Anonymous';
     const assumption: Assumption = {
       ...assumptionData,
       id: generateId(),
+      updatedBy: userName,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-    saveAssumptionToStorage(assumption);
-    const assumptions = loadAssumptions();
-    set({ assumptions });
+    // Optimistic update
+    set((state) => ({ assumptions: [...state.assumptions, assumption] }));
+
+    const sessionId = get().currentProjectId;
+    if (sessionId) {
+      try {
+        await saveAssumptionToFirestore(sessionId, assumption);
+      } catch {
+        // Firestore write failed; in-memory state is already updated
+      }
+    }
   },
 
-  updateAssumption: (assumption) => {
-    const updatedAssumption = {
+  updateAssumption: async (assumption) => {
+    const userName = get().userName || 'Anonymous';
+    const updatedAssumption: Assumption = {
       ...assumption,
+      updatedBy: userName,
       updatedAt: Date.now(),
     };
-    saveAssumptionToStorage(updatedAssumption);
-    const assumptions = loadAssumptions();
-    set({ assumptions });
+    set((state) => ({
+      assumptions: state.assumptions.map((a) =>
+        a.id === updatedAssumption.id ? updatedAssumption : a
+      ),
+    }));
+
+    const sessionId = get().currentProjectId;
+    if (sessionId) {
+      try {
+        await saveAssumptionToFirestore(sessionId, updatedAssumption);
+      } catch {
+        // Firestore write failed; in-memory state is already updated
+      }
+    }
   },
 
-  deleteAssumption: (assumptionId) => {
-    deleteAssumptionFromStorage(assumptionId);
-    const assumptions = loadAssumptions();
-    set({ assumptions });
+  deleteAssumption: async (assumptionId) => {
+    const sessionId = get().currentProjectId;
+    set((state) => ({
+      assumptions: state.assumptions.filter((a) => a.id !== assumptionId),
+    }));
+    if (sessionId) {
+      try {
+        await deleteAssumptionFromFirestore(sessionId, assumptionId);
+      } catch {
+        // Firestore write failed; in-memory state is already updated
+      }
+    }
   },
 
   openAssumptionModal: (assumption) => {
@@ -191,31 +267,44 @@ export const useStore = create<AppState>((set, get) => ({
     });
   },
 
-  addScore: (assumptionId, scoreData) => {
-    const assumptions = get().assumptions;
-    const assumption = assumptions.find((a) => a.id === assumptionId);
+  addScore: async (assumptionId, scoreData) => {
+    const state = get();
+    const assumption = state.assumptions.find((a) => a.id === assumptionId);
     if (!assumption) return;
 
-    const userName = get().userName || 'Anonymous';
+    const userName = state.userName || 'Anonymous';
 
-    // Remove existing score from this user if exists
-    const filteredScores = assumption.scores.filter((s) => s.person !== userName);
-
+    // Replace existing score from this user
+    const filteredScores = assumption.scores.filter(
+      (s) => s.person !== userName
+    );
     const newScore: Score = {
       ...scoreData,
       person: userName,
       timestamp: Date.now(),
     };
 
-    const updatedAssumption = {
+    const updatedAssumption: Assumption = {
       ...assumption,
       scores: [...filteredScores, newScore],
+      updatedBy: userName,
       updatedAt: Date.now(),
     };
 
-    saveAssumptionToStorage(updatedAssumption);
-    const newAssumptions = loadAssumptions();
-    set({ assumptions: newAssumptions });
+    set((s) => ({
+      assumptions: s.assumptions.map((a) =>
+        a.id === assumptionId ? updatedAssumption : a
+      ),
+    }));
+
+    const sessionId = state.currentProjectId;
+    if (sessionId) {
+      try {
+        await saveAssumptionToFirestore(sessionId, updatedAssumption);
+      } catch {
+        // Firestore write failed; in-memory state is already updated
+      }
+    }
   },
 
   // View actions

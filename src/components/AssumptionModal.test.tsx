@@ -14,6 +14,7 @@ function makeAssumption(overrides: Partial<Assumption> = {}): Assumption {
     category: 'users',
     scores: [],
     createdBy: 'Alice',
+    updatedBy: 'Alice',
     createdAt: 1000,
     updatedAt: 1000,
     ...overrides,
@@ -27,6 +28,7 @@ function resetStore(overrides = {}) {
     currentProjectId: 'proj-1',
     userName: 'Alice',
     viewMode: 'category',
+    isSessionLoading: false,
     isProjectModalOpen: false,
     isAssumptionModalOpen: false,
     isScoreModalOpen: false,
@@ -183,6 +185,7 @@ describe('AssumptionModal', () => {
         category: 'technology' as const,
         scores: [],
         createdBy: '',
+        updatedBy: '',
         createdAt: 0,
         updatedAt: 0,
       };

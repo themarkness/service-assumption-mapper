@@ -2,9 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import type { ProjectPhase } from '../types';
 
-export const ProjectModal: React.FC = () => {
-  const { isProjectModalOpen, closeProjectModal, createProject, currentProjectId, projects } =
-    useStore();
+interface ProjectModalProps {
+  /** Called with the new session ID after a session is created (home flow). */
+  onCreated?: (sessionId: string) => void;
+}
+
+export const ProjectModal: React.FC<ProjectModalProps> = ({ onCreated }) => {
+  const {
+    isProjectModalOpen,
+    closeProjectModal,
+    createProject,
+    updateProject,
+    currentProjectId,
+    projects,
+  } = useStore();
 
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
@@ -28,9 +39,16 @@ export const ProjectModal: React.FC = () => {
 
   if (!isProjectModalOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    createProject(formData);
+    if (currentProject) {
+      await updateProject({ ...currentProject, ...formData });
+    } else {
+      const sessionId = await createProject(formData);
+      if (onCreated) {
+        onCreated(sessionId);
+      }
+    }
     closeProjectModal();
     setFormData({
       name: '',
@@ -54,7 +72,7 @@ export const ProjectModal: React.FC = () => {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-6 text-gds-black">
-            {currentProject ? 'Edit Project' : 'Create New Project'}
+            {currentProject ? 'Edit Session' : 'Create New Session'}
           </h2>
 
           <form onSubmit={handleSubmit}>
@@ -140,7 +158,7 @@ export const ProjectModal: React.FC = () => {
 
             <div className="flex gap-3 mt-6">
               <button type="submit" className="btn-primary flex-1">
-                {currentProject ? 'Save Changes' : 'Create Project'}
+                {currentProject ? 'Save Changes' : 'Create Session'}
               </button>
               <button
                 type="button"

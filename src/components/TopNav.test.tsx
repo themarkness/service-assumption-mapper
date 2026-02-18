@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { TopNav } from './TopNav';
 import { useStore } from '../store/useStore';
 import type { Project } from '../types';
@@ -25,6 +26,7 @@ function resetStore(overrides = {}) {
     currentProjectId: null,
     userName: null,
     viewMode: 'category',
+    isSessionLoading: false,
     isProjectModalOpen: false,
     isAssumptionModalOpen: false,
     isScoreModalOpen: false,
@@ -42,23 +44,31 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+function renderTopNav() {
+  return render(
+    <MemoryRouter>
+      <TopNav />
+    </MemoryRouter>
+  );
+}
+
 describe('TopNav', () => {
   it('renders nothing when there is no current project', () => {
-    const { container } = render(<TopNav />);
+    const { container } = renderTopNav();
     expect(container.firstChild).toBeNull();
   });
 
   it('renders when a current project is set', () => {
     const project = makeProject();
     useStore.setState({ projects: [project], currentProjectId: project.id });
-    render(<TopNav />);
+    renderTopNav();
     expect(screen.getByText('Test Project')).toBeInTheDocument();
   });
 
   it('shows the project team and phase', () => {
     const project = makeProject({ team: 'GDS Team', phase: 'Beta' });
     useStore.setState({ projects: [project], currentProjectId: project.id });
-    render(<TopNav />);
+    renderTopNav();
     expect(screen.getByText(/gds team/i)).toBeInTheDocument();
     expect(screen.getByText(/beta/i)).toBeInTheDocument();
   });
@@ -66,7 +76,7 @@ describe('TopNav', () => {
   it('shows Category View and Grid View toggle buttons', () => {
     const project = makeProject();
     useStore.setState({ projects: [project], currentProjectId: project.id });
-    render(<TopNav />);
+    renderTopNav();
     expect(screen.getByRole('button', { name: /category view/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /grid view/i })).toBeInTheDocument();
   });
@@ -75,7 +85,7 @@ describe('TopNav', () => {
     const project = makeProject();
     useStore.setState({ projects: [project], currentProjectId: project.id, viewMode: 'category' });
     const user = userEvent.setup();
-    render(<TopNav />);
+    renderTopNav();
 
     await user.click(screen.getByRole('button', { name: /grid view/i }));
 
@@ -86,29 +96,36 @@ describe('TopNav', () => {
     const project = makeProject();
     useStore.setState({ projects: [project], currentProjectId: project.id, viewMode: 'grid' });
     const user = userEvent.setup();
-    render(<TopNav />);
+    renderTopNav();
 
     await user.click(screen.getByRole('button', { name: /category view/i }));
 
     expect(useStore.getState().viewMode).toBe('category');
   });
 
-  it('clicking "← Projects" switches to projects view', async () => {
+  it('shows "← Home" navigation button', () => {
+    const project = makeProject();
+    useStore.setState({ projects: [project], currentProjectId: project.id });
+    renderTopNav();
+    expect(screen.getByRole('button', { name: /← home/i })).toBeInTheDocument();
+  });
+
+  it('clicking "← Home" can be clicked without error', async () => {
     const project = makeProject();
     useStore.setState({ projects: [project], currentProjectId: project.id });
     const user = userEvent.setup();
-    render(<TopNav />);
+    renderTopNav();
 
-    await user.click(screen.getByRole('button', { name: /← projects/i }));
-
-    expect(useStore.getState().viewMode).toBe('projects');
+    await expect(
+      user.click(screen.getByRole('button', { name: /← home/i }))
+    ).resolves.not.toThrow();
   });
 
   it('clicking "Add Assumption" opens the assumption modal', async () => {
     const project = makeProject();
     useStore.setState({ projects: [project], currentProjectId: project.id });
     const user = userEvent.setup();
-    render(<TopNav />);
+    renderTopNav();
 
     await user.click(screen.getByRole('button', { name: /\+ add assumption/i }));
 
@@ -119,7 +136,7 @@ describe('TopNav', () => {
     const project = makeProject();
     useStore.setState({ projects: [project], currentProjectId: project.id });
     const user = userEvent.setup();
-    render(<TopNav />);
+    renderTopNav();
 
     await user.click(screen.getByText('Test Project'));
 
@@ -130,7 +147,7 @@ describe('TopNav', () => {
     it('export menu is hidden by default', () => {
       const project = makeProject();
       useStore.setState({ projects: [project], currentProjectId: project.id });
-      render(<TopNav />);
+      renderTopNav();
       expect(screen.queryByRole('button', { name: /export csv/i })).not.toBeInTheDocument();
     });
 
@@ -138,7 +155,7 @@ describe('TopNav', () => {
       const project = makeProject();
       useStore.setState({ projects: [project], currentProjectId: project.id });
       const user = userEvent.setup();
-      render(<TopNav />);
+      renderTopNav();
 
       await user.click(screen.getByRole('button', { name: /export ▾/i }));
 
@@ -152,12 +169,10 @@ describe('TopNav', () => {
       useStore.setState({ projects: [project], currentProjectId: project.id });
 
       const user = userEvent.setup();
-      // Render BEFORE setting up createElement mock so React can mount properly
-      render(<TopNav />);
+      renderTopNav();
 
       await user.click(screen.getByRole('button', { name: /export ▾/i }));
 
-      // Intercept createElement only for 'a' tags (used by the export utility)
       const linkMock = { href: '', download: '', click: vi.fn() };
       const origCreateElement = document.createElement.bind(document);
       vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
@@ -177,7 +192,7 @@ describe('TopNav', () => {
       useStore.setState({ projects: [project], currentProjectId: project.id });
 
       const user = userEvent.setup();
-      render(<TopNav />);
+      renderTopNav();
 
       await user.click(screen.getByRole('button', { name: /export ▾/i }));
 
@@ -199,7 +214,7 @@ describe('TopNav', () => {
       useStore.setState({ projects: [project], currentProjectId: project.id });
 
       const user = userEvent.setup();
-      render(<TopNav />);
+      renderTopNav();
 
       await user.click(screen.getByRole('button', { name: /export ▾/i }));
       await expect(

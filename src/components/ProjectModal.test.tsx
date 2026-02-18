@@ -1,8 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ProjectModal } from './ProjectModal';
 import { useStore } from '../store/useStore';
+
+// Mock Firestore so store actions resolve immediately in tests
+vi.mock('../utils/firestoreStorage', () => ({
+  saveSession: vi.fn().mockResolvedValue(undefined),
+  getSession: vi.fn().mockResolvedValue(null),
+  deleteSession: vi.fn().mockResolvedValue(undefined),
+  saveAssumption: vi.fn().mockResolvedValue(undefined),
+  deleteAssumption: vi.fn().mockResolvedValue(undefined),
+  getAssumptions: vi.fn().mockResolvedValue([]),
+}));
 
 function resetStore(overrides = {}) {
   useStore.setState({
@@ -11,6 +21,7 @@ function resetStore(overrides = {}) {
     currentProjectId: null,
     userName: null,
     viewMode: 'category',
+    isSessionLoading: false,
     isProjectModalOpen: false,
     isAssumptionModalOpen: false,
     isScoreModalOpen: false,
@@ -33,7 +44,7 @@ describe('ProjectModal', () => {
   it('renders the modal when isProjectModalOpen is true', () => {
     useStore.setState({ isProjectModalOpen: true });
     render(<ProjectModal />);
-    expect(screen.getByText('Create New Project')).toBeInTheDocument();
+    expect(screen.getByText('Create New Session')).toBeInTheDocument();
   });
 
   it('shows all required form fields', () => {
@@ -71,14 +82,16 @@ describe('ProjectModal', () => {
 
     await user.type(screen.getByLabelText(/service\/product name/i), 'My Service');
     await user.type(screen.getByLabelText(/team\/department/i), 'GDS Team');
-    await user.click(screen.getByRole('button', { name: /create project/i }));
+    await user.click(screen.getByRole('button', { name: /create session/i }));
 
-    expect(useStore.getState().projects).toHaveLength(1);
-    expect(useStore.getState().projects[0].name).toBe('My Service');
-    expect(useStore.getState().isProjectModalOpen).toBe(false);
+    await waitFor(() => {
+      expect(useStore.getState().projects).toHaveLength(1);
+      expect(useStore.getState().projects[0].name).toBe('My Service');
+      expect(useStore.getState().isProjectModalOpen).toBe(false);
+    });
   });
 
-  it('shows "Edit Project" title when a current project exists', () => {
+  it('shows "Edit Session" title when a current project exists', () => {
     useStore.getState().createProject({
       name: 'Existing Project',
       team: 'Team',
@@ -87,7 +100,7 @@ describe('ProjectModal', () => {
     });
     useStore.setState({ isProjectModalOpen: true });
     render(<ProjectModal />);
-    expect(screen.getByText('Edit Project')).toBeInTheDocument();
+    expect(screen.getByText('Edit Session')).toBeInTheDocument();
   });
 
   it('shows "Save Changes" button when editing', () => {
