@@ -43,19 +43,29 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ onCreated }) => {
     e.preventDefault();
     if (currentProject) {
       await updateProject({ ...currentProject, ...formData });
+      closeProjectModal();
+      setFormData({
+        name: '',
+        team: '',
+        phase: 'Discovery',
+        date: new Date().toISOString().split('T')[0],
+      });
     } else {
       const sessionId = await createProject(formData);
+      // Close and reset BEFORE navigating so the modal is hidden when
+      // SessionView mounts — otherwise isProjectModalOpen stays true across
+      // the route transition and the modal re-opens in Edit mode.
+      closeProjectModal();
+      setFormData({
+        name: '',
+        team: '',
+        phase: 'Discovery',
+        date: new Date().toISOString().split('T')[0],
+      });
       if (onCreated) {
         onCreated(sessionId);
       }
     }
-    closeProjectModal();
-    setFormData({
-      name: '',
-      team: '',
-      phase: 'Discovery',
-      date: new Date().toISOString().split('T')[0],
-    });
   };
 
   const handleChange = (
