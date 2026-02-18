@@ -78,10 +78,10 @@ export const useStore = create<AppState>((set, get) => ({
   editingAssumption: null,
   scoringAssumption: null,
 
-  // Load only user name from localStorage on app init
+  // Load user name from localStorage and reset session state on home-page init
   loadData: () => {
     const userName = loadUserName();
-    set({ userName });
+    set({ userName, currentProjectId: null, projects: [], assumptions: [] });
   },
 
   setUserName: (name: string) => {

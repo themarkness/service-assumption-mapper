@@ -70,6 +70,30 @@ describe('loadData', () => {
     expect(currentProjectId).toBeNull();
     expect(userName).toBeNull();
   });
+
+  it('clears stale project state from a previous session', () => {
+    // Simulate leftover state from a previous session
+    useStore.setState({
+      currentProjectId: 'stale-id',
+      projects: [
+        {
+          id: 'stale-id',
+          name: 'Stale Session',
+          team: 'Team',
+          phase: 'Discovery',
+          date: '2024-01-01',
+          createdAt: 0,
+          updatedAt: 0,
+        },
+      ],
+      assumptions: [],
+    });
+
+    getState().loadData();
+
+    expect(getState().currentProjectId).toBeNull();
+    expect(getState().projects).toEqual([]);
+  });
 });
 
 // ---------------------------------------------------------------------------
