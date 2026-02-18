@@ -4,7 +4,6 @@ import App from './App';
 import { useStore } from './store/useStore';
 import {
   saveProject,
-  saveProjects,
   setCurrentProject as setCurrentProjectStorage,
 } from './utils/storage';
 import type { Project } from './types';
