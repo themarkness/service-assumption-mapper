@@ -8,7 +8,7 @@ This file gives Claude and other AI agents the context needed to work effectivel
 
 A client-side web app for government product teams to map, score, and prioritise service assumptions using the **GDS Riskiest Assumption Testing (RAT)** methodology. There is no backend — all data is persisted to `localStorage`.
 
-The core formula is: **Risk = Importance × (10 − Confidence)**
+The core formula is: **Risk = Importance × (10 − Evidence)**
 
 High risk scores surface assumptions that are both highly impactful and poorly evidenced — these are the ones to test first.
 
@@ -76,7 +76,7 @@ src/
 │   ├── ProjectsPage.tsx       # Project list dashboard
 │   ├── ProjectModal.tsx       # Create / edit project form
 │   ├── AssumptionModal.tsx    # Create / edit assumption form
-│   ├── ScoreModal.tsx         # Importance + confidence sliders
+│   ├── ScoreModal.tsx         # Importance + evidence sliders
 │   ├── AssumptionCard.tsx     # Reusable card — rendered inside both views
 │   ├── CategoryView.tsx       # 8-column DnD view (@dnd-kit)
 │   └── GridView.tsx           # 2×2 matrix — react-draggable + zoom/pan
@@ -235,13 +235,13 @@ This means TypeScript errors in test files won't block `npm run build`, but Vite
 ### Risk score formula
 
 ```
-Risk = Importance × (10 − Confidence)
+Risk = Importance × (10 − Evidence)
 ```
 
 - `Importance` (1–10): How much damage if this assumption is wrong?
-- `Confidence` (1–10): How much evidence supports it?
-- Maximum risk = 100 (Importance 10, Confidence 0)
-- Zero risk = 0 (fully confident, or zero importance)
+- `Evidence` (1–10): How much evidence supports it?
+- Maximum risk = 100 (Importance 10, Evidence 0)
+- Zero risk = 0 (fully evident, or zero importance)
 
 ### Risk thresholds
 
