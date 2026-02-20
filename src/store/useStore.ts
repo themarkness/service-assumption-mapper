@@ -126,60 +126,52 @@ export const useStore = create<AppState>((set, get) => ({
     set({ currentProjectId: projectId });
   },
 
-  createProject: async (projectData) => {
+  createProject: (projectData) => {
     const project: Project = {
       ...projectData,
       id: generateId(),
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-    // Optimistic update
+    // Optimistic update — apply immediately so navigation can proceed
     set((state) => ({
       projects: [...state.projects, project],
       currentProjectId: project.id,
       viewMode: 'category',
     }));
-    try {
-      await saveSession(project);
-    } catch {
-      // Firestore write failed; in-memory state is already updated
-    }
-    return project.id;
+    // Fire-and-forget: don't await — if Firestore is unreachable it queues
+    // indefinitely and would block navigation before the promise resolves
+    saveSession(project).catch(() => {});
+    return Promise.resolve(project.id);
   },
 
-  updateProject: async (project) => {
+  updateProject: (project) => {
     const updatedProject = { ...project, updatedAt: Date.now() };
     set((state) => ({
       projects: state.projects.map((p) =>
         p.id === updatedProject.id ? updatedProject : p
       ),
     }));
-    try {
-      await saveSession(updatedProject);
-    } catch {
-      // Firestore write failed; in-memory state is already updated
-    }
+    saveSession(updatedProject).catch(() => {});
+    return Promise.resolve();
   },
 
-  deleteProject: async (projectId) => {
+  deleteProject: (projectId) => {
     set((state) => ({
       projects: state.projects.filter((p) => p.id !== projectId),
       assumptions: state.assumptions.filter((a) => a.projectId !== projectId),
       currentProjectId:
         state.currentProjectId === projectId ? null : state.currentProjectId,
     }));
-    try {
-      await deleteSession(projectId);
-    } catch {
-      // Firestore write failed; in-memory state is already updated
-    }
+    deleteSession(projectId).catch(() => {});
+    return Promise.resolve();
   },
 
   openProjectModal: () => set({ isProjectModalOpen: true }),
   closeProjectModal: () => set({ isProjectModalOpen: false }),
 
   // Assumption actions
-  createAssumption: async (assumptionData) => {
+  createAssumption: (assumptionData) => {
     const userName = get().userName || 'Anonymous';
     const assumption: Assumption = {
       ...assumptionData,
@@ -188,20 +180,15 @@ export const useStore = create<AppState>((set, get) => ({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-    // Optimistic update
     set((state) => ({ assumptions: [...state.assumptions, assumption] }));
-
     const sessionId = get().currentProjectId;
     if (sessionId) {
-      try {
-        await saveAssumptionToFirestore(sessionId, assumption);
-      } catch {
-        // Firestore write failed; in-memory state is already updated
-      }
+      saveAssumptionToFirestore(sessionId, assumption).catch(() => {});
     }
+    return Promise.resolve();
   },
 
-  updateAssumption: async (assumption) => {
+  updateAssumption: (assumption) => {
     const userName = get().userName || 'Anonymous';
     const updatedAssumption: Assumption = {
       ...assumption,
@@ -213,29 +200,22 @@ export const useStore = create<AppState>((set, get) => ({
         a.id === updatedAssumption.id ? updatedAssumption : a
       ),
     }));
-
     const sessionId = get().currentProjectId;
     if (sessionId) {
-      try {
-        await saveAssumptionToFirestore(sessionId, updatedAssumption);
-      } catch {
-        // Firestore write failed; in-memory state is already updated
-      }
+      saveAssumptionToFirestore(sessionId, updatedAssumption).catch(() => {});
     }
+    return Promise.resolve();
   },
 
-  deleteAssumption: async (assumptionId) => {
+  deleteAssumption: (assumptionId) => {
     const sessionId = get().currentProjectId;
     set((state) => ({
       assumptions: state.assumptions.filter((a) => a.id !== assumptionId),
     }));
     if (sessionId) {
-      try {
-        await deleteAssumptionFromFirestore(sessionId, assumptionId);
-      } catch {
-        // Firestore write failed; in-memory state is already updated
-      }
+      deleteAssumptionFromFirestore(sessionId, assumptionId).catch(() => {});
     }
+    return Promise.resolve();
   },
 
   openAssumptionModal: (assumption) => {
@@ -267,10 +247,10 @@ export const useStore = create<AppState>((set, get) => ({
     });
   },
 
-  addScore: async (assumptionId, scoreData) => {
+  addScore: (assumptionId, scoreData) => {
     const state = get();
     const assumption = state.assumptions.find((a) => a.id === assumptionId);
-    if (!assumption) return;
+    if (!assumption) return Promise.resolve();
 
     const userName = state.userName || 'Anonymous';
 
@@ -299,12 +279,9 @@ export const useStore = create<AppState>((set, get) => ({
 
     const sessionId = state.currentProjectId;
     if (sessionId) {
-      try {
-        await saveAssumptionToFirestore(sessionId, updatedAssumption);
-      } catch {
-        // Firestore write failed; in-memory state is already updated
-      }
+      saveAssumptionToFirestore(sessionId, updatedAssumption).catch(() => {});
     }
+    return Promise.resolve();
   },
 
   // View actions
