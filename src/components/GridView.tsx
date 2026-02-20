@@ -6,11 +6,14 @@ import { addCalculations } from '../utils/calculations';
 import { AssumptionCard } from './AssumptionCard';
 import type { AssumptionWithCalculations } from '../types';
 
+const GRID_CARD_SIZE_PX = 120;
+
 export const GridView: React.FC = () => {
-  const { assumptions, currentProjectId, updateAssumption } = useStore();
+  const { assumptions, currentProjectId, updateAssumption, openAssumptionModal } = useStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const cardRefs = useRef<Map<string, React.RefObject<HTMLDivElement | null>>>(new Map());
+  const justDraggedRef = useRef(false);
 
   const projectAssumptions = assumptions
     .filter((a) => a.projectId === currentProjectId)
@@ -46,53 +49,40 @@ export const GridView: React.FC = () => {
     return { x, y };
   };
 
-  // Convert canvas position back to scores
-  const positionToScores = (x: number, y: number) => {
-    // X-axis: Evidence (Confidence)
-    // x% position maps to confidence score 1-10
-    const confidence = Math.max(1, Math.min(10, (x / 100) * 10));
-
-    // Y-axis: Importance (inverted)
-    // y% position maps to importance score 1-10 (inverted)
-    const importance = Math.max(1, Math.min(10, 10 - (y / 100) * 10));
-
-    return { confidence, importance };
+  const handleCardClick = (assumption: AssumptionWithCalculations) => {
+    if (justDraggedRef.current) {
+      justDraggedRef.current = false;
+      return;
+    }
+    openAssumptionModal(assumption);
   };
 
-  // Handle drag stop
+  // Handle drag stop (do not open assumption modal after drop)
   const handleDragStop = (assumption: AssumptionWithCalculations, _e: DraggableEvent, data: DraggableData) => {
+    justDraggedRef.current = true;
     setDraggingId(null);
+    setTimeout(() => {
+      justDraggedRef.current = false;
+    }, 300);
 
     if (!containerRef.current) return;
 
     const containerRect = containerRef.current.getBoundingClientRect();
 
-    // Calculate percentage position within the container
-    // The card is centered on its position, so we need to add half the card width/height
-    const cardWidth = 256; // w-64 = 16rem = 256px
     const cardHeight = data.node.offsetHeight;
-
-    const centerX = data.x + cardWidth / 2;
+    const centerX = data.x + GRID_CARD_SIZE_PX / 2;
     const centerY = data.y + cardHeight / 2;
 
     const xPercent = (centerX / containerRect.width) * 100;
     const yPercent = (centerY / containerRect.height) * 100;
 
-    // Clamp to bounds
     const clampedX = Math.max(5, Math.min(95, xPercent));
     const clampedY = Math.max(5, Math.min(95, yPercent));
 
-    // Update the assumption with the new manual position
     updateAssumption({
       ...assumption,
       manualPosition: { x: clampedX, y: clampedY },
     });
-
-    // Calculate what the scores would be at this position
-    const { confidence, importance } = positionToScores(clampedX, clampedY);
-
-    console.log(`Card moved to: ${clampedX.toFixed(1)}%, ${clampedY.toFixed(1)}%`);
-    console.log(`Equivalent scores - Evidence: ${confidence.toFixed(1)}, Importance: ${importance.toFixed(1)}`);
   };
 
   const handleDragStart = (id: string) => {
@@ -212,9 +202,8 @@ export const GridView: React.FC = () => {
                           const containerWidth = containerRef.current?.offsetWidth || 1000;
                           const containerHeight = containerRef.current?.offsetHeight || 600;
 
-                          const cardWidth = 256; // w-64
-                          const xPixels = (clampedX / 100) * containerWidth - cardWidth / 2;
-                          const yPixels = (clampedY / 100) * containerHeight - 128; // approximate card height/2
+                          const xPixels = (clampedX / 100) * containerWidth - GRID_CARD_SIZE_PX / 2;
+                          const yPixels = (clampedY / 100) * containerHeight - GRID_CARD_SIZE_PX / 2;
 
                           const nodeRef = getCardRef(assumption.id);
 
@@ -229,11 +218,17 @@ export const GridView: React.FC = () => {
                             >
                               <div
                                 ref={nodeRef}
-                                className={`absolute w-64 pointer-events-auto cursor-move ${
+                                style={{ width: GRID_CARD_SIZE_PX }}
+                                className={`absolute pointer-events-auto cursor-move ${
                                   draggingId === assumption.id ? 'opacity-70 scale-105' : ''
                                 } transition-all`}
                               >
-                                <AssumptionCard assumption={assumption} />
+                                <AssumptionCard
+                                  assumption={assumption}
+                                  variant="grid"
+                                  onCardClick={handleCardClick}
+                                  isDragging={draggingId === assumption.id}
+                                />
                               </div>
                             </Draggable>
                           );
