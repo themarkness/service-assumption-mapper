@@ -3,6 +3,7 @@ import { doc, collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { useStore } from '../store/useStore';
 import { saveCurrentSession } from '../utils/storage';
+import { saveSession } from '../utils/firestoreStorage';
 import type { Project, Assumption } from '../types';
 
 /**
@@ -19,15 +20,29 @@ export function useSessionSync(sessionId: string | undefined): void {
     // Persist session ID locally so the user can return after refresh
     saveCurrentSession(sessionId);
 
+    // One-shot recovery flag — avoid retrying indefinitely if the save keeps failing
+    let recoveryAttempted = false;
+
     // Listen to the session document
     const sessionUnsub = onSnapshot(
       doc(db, 'sessions', sessionId),
       (snap) => {
         if (snap.exists()) {
           setSessionData({ project: snap.data() as Project });
+        } else if (!recoveryAttempted) {
+          recoveryAttempted = true;
+          // Document missing — if we're the creator with local state, try to re-save
+          // (the initial fire-and-forget save may have failed silently)
+          const localProject = useStore
+            .getState()
+            .projects.find((p) => p.id === sessionId);
+          if (localProject) {
+            saveSession(localProject).catch((err: Error) => {
+              console.error('Session re-save failed:', err);
+              setSessionError('Session sync failed: ' + err.message);
+            });
+          }
         }
-        // If !snap.exists(), do nothing — the document may not have been
-        // written yet (fire-and-forget race). SessionView has a timeout fallback.
       },
       (error) => {
         // Firestore permission or network error — surface immediately

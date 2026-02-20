@@ -146,8 +146,12 @@ export const useStore = create<AppState>((set, get) => ({
       viewMode: 'category',
     }));
     // Fire-and-forget: don't await — if Firestore is unreachable it queues
-    // indefinitely and would block navigation before the promise resolves
-    saveSession(project).catch(() => {});
+    // indefinitely and would block navigation before the promise resolves.
+    // If it fails, surface the error so the creator knows invite links won't work.
+    saveSession(project).catch((err: Error) => {
+      console.error('Firestore session save failed:', err);
+      set({ sessionError: 'Session could not sync to server — invite links may not work. (' + err.message + ')' });
+    });
     return Promise.resolve(project.id);
   },
 

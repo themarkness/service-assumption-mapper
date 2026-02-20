@@ -46,7 +46,7 @@ function SessionView() {
     // Only start timer if we have a userName and no currentProjectId
     if (!userName || currentProjectId) return;
     
-    const timer = setTimeout(() => setLoadingTimedOut(true), 8000);
+    const timer = setTimeout(() => setLoadingTimedOut(true), 5000);
     return () => clearTimeout(timer);
   }, [userName, currentProjectId, sessionId]);
 
@@ -84,6 +84,11 @@ function SessionView() {
 
   return (
     <div className="min-h-screen bg-gds-light-grey">
+      {sessionError && (
+        <div className="bg-yellow-50 border-b border-yellow-300 px-6 py-2 text-sm text-yellow-800">
+          ⚠ {sessionError}
+        </div>
+      )}
       <SessionBanner />
       <TopNav />
       <main className="h-[calc(100vh-140px)]">
