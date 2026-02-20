@@ -11,6 +11,7 @@ import type { Project, Assumption } from '../types';
  */
 export function useSessionSync(sessionId: string | undefined): void {
   const setSessionData = useStore((state) => state.setSessionData);
+  const setSessionError = useStore((state) => state.setSessionError);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -25,6 +26,13 @@ export function useSessionSync(sessionId: string | undefined): void {
         if (snap.exists()) {
           setSessionData({ project: snap.data() as Project });
         }
+        // If !snap.exists(), do nothing — the document may not have been
+        // written yet (fire-and-forget race). SessionView has a timeout fallback.
+      },
+      (error) => {
+        // Firestore permission or network error — surface immediately
+        console.error('Session load error:', error);
+        setSessionError('Could not load session: ' + error.message);
       }
     );
 
@@ -34,6 +42,9 @@ export function useSessionSync(sessionId: string | undefined): void {
       (snap) => {
         const assumptions = snap.docs.map((d) => d.data() as Assumption);
         setSessionData({ assumptions });
+      },
+      (error) => {
+        console.error('Assumptions load error:', error);
       }
     );
 
@@ -41,5 +52,5 @@ export function useSessionSync(sessionId: string | undefined): void {
       sessionUnsub();
       assumptionsUnsub();
     };
-  }, [sessionId, setSessionData]);
+  }, [sessionId, setSessionData, setSessionError]);
 }

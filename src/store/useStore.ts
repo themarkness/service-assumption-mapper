@@ -20,6 +20,7 @@ interface AppState {
   userName: string | null;
   viewMode: ViewMode;
   isSessionLoading: boolean;
+  sessionError: string | null;
 
   // UI State
   isProjectModalOpen: boolean;
@@ -32,9 +33,10 @@ interface AppState {
   loadData: () => void;
   setUserName: (name: string) => void;
   setSessionData: (data: { project?: Project; assumptions?: Assumption[] }) => void;
+  setSessionError: (error: string | null) => void;
 
   // Project actions
-  setCurrentProject: (projectId: string) => void;
+  setCurrentProject: (projectId: string | null) => void;
   createProject: (
     project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>
   ) => Promise<string>;
@@ -72,6 +74,7 @@ export const useStore = create<AppState>((set, get) => ({
   userName: null,
   viewMode: 'category',
   isSessionLoading: false,
+  sessionError: null,
   isProjectModalOpen: false,
   isAssumptionModalOpen: false,
   isScoreModalOpen: false,
@@ -81,7 +84,7 @@ export const useStore = create<AppState>((set, get) => ({
   // Load user name from localStorage and reset session state on home-page init
   loadData: () => {
     const userName = loadUserName();
-    set({ userName, currentProjectId: null, projects: [], assumptions: [] });
+    set({ userName, currentProjectId: null, projects: [], assumptions: [], sessionError: null });
   },
 
   setUserName: (name: string) => {
@@ -95,6 +98,7 @@ export const useStore = create<AppState>((set, get) => ({
       const updates: Partial<AppState> = { isSessionLoading: false };
 
       if (project !== undefined) {
+        updates.sessionError = null;
         const existing = state.projects.find((p) => p.id === project.id);
         if (existing) {
           updates.projects = state.projects.map((p) =>
@@ -121,8 +125,10 @@ export const useStore = create<AppState>((set, get) => ({
     });
   },
 
+  setSessionError: (error: string | null) => set({ sessionError: error }),
+
   // Project actions
-  setCurrentProject: (projectId: string) => {
+  setCurrentProject: (projectId: string | null) => {
     set({ currentProjectId: projectId });
   },
 

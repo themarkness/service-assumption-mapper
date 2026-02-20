@@ -15,6 +15,7 @@ function resetStore() {
     userName: null,
     viewMode: 'category',
     isSessionLoading: false,
+    sessionError: null,
     isProjectModalOpen: false,
     isAssumptionModalOpen: false,
     isScoreModalOpen: false,
