@@ -101,169 +101,171 @@ export const GridView: React.FC = () => {
 
   return (
     <div className="p-6 h-full">
-      <div className="bg-white rounded shadow-md p-6 h-[calc(100vh-200px)] relative overflow-hidden">
-        {/* Zoom controls hint */}
-        <div className="absolute top-2 right-2 text-xs text-gray-500 bg-white/80 px-3 py-1 rounded shadow z-10">
-          Scroll to zoom in • Drag canvas to pan • Drag cards to reposition
+      <div className="flex gap-2 h-[calc(100vh-200px)]">
+
+        {/* Y-axis label column — outside the canvas */}
+        <div className="flex flex-col justify-between py-2 text-xs font-medium text-gray-700 pointer-events-none select-none">
+          <span className="[writing-mode:vertical-rl] rotate-180">Important</span>
+          <span className="[writing-mode:vertical-rl] rotate-180">↑ Importance ↓</span>
+          <span className="[writing-mode:vertical-rl] rotate-180">Unimportant</span>
         </div>
 
-        <TransformWrapper
-          initialScale={1}
-          minScale={1}
-          maxScale={3}
-          centerOnInit={true}
-          wheel={{ step: 0.1 }}
-          pinch={{ step: 5 }}
-          doubleClick={{ disabled: true }}
-          panning={{ disabled: draggingId !== null }}
-        >
-          {({ zoomIn, zoomOut, resetTransform }) => (
-            <>
-              {/* Zoom controls */}
-              <div className="absolute top-12 right-2 flex flex-col gap-1 z-10">
-                <button
-                  onClick={() => zoomIn()}
-                  className="bg-white hover:bg-gray-100 border border-gray-300 rounded px-2 py-1 text-sm shadow"
-                  title="Zoom in"
-                >
-                  +
-                </button>
-                <button
-                  onClick={() => zoomOut()}
-                  className="bg-white hover:bg-gray-100 border border-gray-300 rounded px-2 py-1 text-sm shadow"
-                  title="Zoom out"
-                >
-                  −
-                </button>
-                <button
-                  onClick={() => resetTransform()}
-                  className="bg-white hover:bg-gray-100 border border-gray-300 rounded px-2 py-1 text-xs shadow"
-                  title="Reset zoom"
-                >
-                  ⟲
-                </button>
-              </div>
+        {/* Canvas + X-axis label */}
+        <div className="flex flex-col flex-1 gap-2">
 
-              <TransformComponent
-                wrapperStyle={{ width: '100%', height: '100%' }}
-                contentStyle={{ width: '100%', height: '100%' }}
-              >
-                <div className="relative w-full h-full">
-                  {/* Grid container - fills entire canvas with NO gaps */}
-                  <div
-                    ref={containerRef}
-                    className="absolute inset-0 grid grid-cols-2 grid-rows-2"
+          {/* Main canvas */}
+          <div className="bg-white rounded shadow-md flex-1 relative overflow-hidden">
+            {/* Zoom controls hint */}
+            <div className="absolute top-2 right-2 text-xs text-gray-500 bg-white/80 px-3 py-1 rounded shadow z-10">
+              Scroll to zoom in • Drag canvas to pan • Drag cards to reposition
+            </div>
+
+            <TransformWrapper
+              initialScale={1}
+              minScale={1}
+              maxScale={3}
+              centerOnInit={true}
+              wheel={{ step: 0.1 }}
+              pinch={{ step: 5 }}
+              doubleClick={{ disabled: true }}
+              panning={{ disabled: draggingId !== null }}
+            >
+              {({ zoomIn, zoomOut, resetTransform }) => (
+                <>
+                  {/* Zoom controls */}
+                  <div className="absolute top-12 right-2 flex flex-col gap-1 z-10">
+                    <button
+                      onClick={() => zoomIn()}
+                      className="bg-white hover:bg-gray-100 border border-gray-300 rounded px-2 py-1 text-sm shadow"
+                      title="Zoom in"
+                    >
+                      +
+                    </button>
+                    <button
+                      onClick={() => zoomOut()}
+                      className="bg-white hover:bg-gray-100 border border-gray-300 rounded px-2 py-1 text-sm shadow"
+                      title="Zoom out"
+                    >
+                      −
+                    </button>
+                    <button
+                      onClick={() => resetTransform()}
+                      className="bg-white hover:bg-gray-100 border border-gray-300 rounded px-2 py-1 text-xs shadow"
+                      title="Reset zoom"
+                    >
+                      ⟲
+                    </button>
+                  </div>
+
+                  <TransformComponent
+                    wrapperStyle={{ width: '100%', height: '100%' }}
+                    contentStyle={{ width: '100%', height: '100%' }}
                   >
-                    {/* Top-left: Validate (Low evidence + Important) */}
-                    <div className="bg-quadrant-validate border border-blue-300 p-4 relative">
-                      <h3 className="font-bold text-sm mb-2">Validate</h3>
-                      <p className="text-xs text-gray-600 leading-relaxed">
-                        These assumptions have promise of a big return but pose risk. Focus our testing and learning here.
-                      </p>
-                    </div>
+                    <div className="relative w-full h-full">
+                      {/* Grid container - fills entire canvas with NO gaps */}
+                      <div
+                        ref={containerRef}
+                        className="absolute inset-0 grid grid-cols-2 grid-rows-2"
+                      >
+                        {/* Top-left: Validate (Low evidence + Important) */}
+                        <div className="bg-quadrant-validate border border-blue-300 p-4 relative">
+                          <h3 className="font-bold text-sm mb-2">Validate</h3>
+                          <p className="text-xs text-gray-600 leading-relaxed">
+                            These assumptions have promise of a big return but pose risk. Focus our testing and learning here.
+                          </p>
+                        </div>
 
-                    {/* Top-right: Build it (High evidence + Important) */}
-                    <div className="bg-quadrant-priority border border-orange-300 p-4 relative">
-                      <h3 className="font-bold text-sm mb-2">Build it</h3>
-                      <p className="text-xs text-gray-600 leading-relaxed">
-                        We have high confidence that these will deliver customer value. Don't spend discovery cycles here.
-                      </p>
-                    </div>
+                        {/* Top-right: Build it (High evidence + Important) */}
+                        <div className="bg-quadrant-priority border border-orange-300 p-4 relative">
+                          <h3 className="font-bold text-sm mb-2">Build it</h3>
+                          <p className="text-xs text-gray-600 leading-relaxed">
+                            We have high confidence that these will deliver customer value. Don't spend discovery cycles here.
+                          </p>
+                        </div>
 
-                    {/* Bottom-left: Discard (Low evidence + Unimportant) */}
-                    <div className="bg-quadrant-defer border border-gray-300 p-4 relative">
-                      <h3 className="font-bold text-sm mb-2">Discard</h3>
-                      <p className="text-xs text-gray-600 leading-relaxed">
-                        We don't have much confidence around this, but at the same time it's not important. Don't waste time here.
-                      </p>
-                    </div>
+                        {/* Bottom-left: Discard (Low evidence + Unimportant) */}
+                        <div className="bg-quadrant-defer border border-gray-300 p-4 relative">
+                          <h3 className="font-bold text-sm mb-2">Discard</h3>
+                          <p className="text-xs text-gray-600 leading-relaxed">
+                            We don't have much confidence around this, but at the same time it's not important. Don't waste time here.
+                          </p>
+                        </div>
 
-                    {/* Bottom-right: Don't test. Usually don't build (High evidence + Unimportant) */}
-                    <div className="bg-quadrant-document border border-gray-400 p-4 relative">
-                      <h3 className="font-bold text-sm mb-2">Don't test. Usually don't build</h3>
-                      <p className="text-xs text-gray-600 leading-relaxed">
-                        Not impactful to users, but sometimes table stakes business functionality ends up here.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Axis labels - overlayed on quadrants */}
-                  <div className="absolute bottom-2 left-0 right-0 flex justify-between text-xs font-medium text-gray-700 px-6 pointer-events-none">
-                    <span className="bg-white/70 px-2 py-1 rounded">Low evidence</span>
-                    <span className="bg-white/70 px-2 py-1 rounded">← Evidence →</span>
-                    <span className="bg-white/70 px-2 py-1 rounded">High evidence</span>
-                  </div>
-
-                  <div className="absolute top-0 bottom-0 left-2 flex items-center pointer-events-none">
-                    <div className="flex flex-col justify-between h-full py-6">
-                      <span className="text-xs font-medium text-gray-700 transform -rotate-90 whitespace-nowrap bg-white/70 px-2 py-1 rounded">
-                        Important
-                      </span>
-                      <span className="text-xs font-medium text-gray-700 transform -rotate-90 whitespace-nowrap bg-white/70 px-2 py-1 rounded">
-                        ↑ Importance ↓
-                      </span>
-                      <span className="text-xs font-medium text-gray-700 transform -rotate-90 whitespace-nowrap bg-white/70 px-2 py-1 rounded">
-                        Unimportant
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Assumption cards positioned on grid */}
-                  <div className="absolute inset-0 pointer-events-none">
-                    {projectAssumptions.map((assumption) => {
-                      const pos = getPosition(assumption);
-                      const clampedX = Math.max(5, Math.min(pos.x, 85));
-                      const clampedY = Math.max(5, Math.min(pos.y, 85));
-
-                      // Calculate pixel position for draggable
-                      // We need to get container dimensions to convert % to pixels
-                      const containerWidth = containerRef.current?.offsetWidth || 1000;
-                      const containerHeight = containerRef.current?.offsetHeight || 600;
-
-                      const cardWidth = 256; // w-64
-                      const xPixels = (clampedX / 100) * containerWidth - cardWidth / 2;
-                      const yPixels = (clampedY / 100) * containerHeight - 128; // approximate card height/2
-
-                      const nodeRef = getCardRef(assumption.id);
-
-                      return (
-                        <Draggable
-                          key={assumption.id}
-                          nodeRef={nodeRef}
-                          position={{ x: xPixels, y: yPixels }}
-                          onStart={() => handleDragStart(assumption.id)}
-                          onStop={(e, data) => handleDragStop(assumption, e, data)}
-                          bounds="parent"
-                        >
-                          <div
-                            ref={nodeRef}
-                            className={`absolute w-64 pointer-events-auto cursor-move ${
-                              draggingId === assumption.id ? 'opacity-70 scale-105' : ''
-                            } transition-all`}
-                          >
-                            <AssumptionCard assumption={assumption} />
-                          </div>
-                        </Draggable>
-                      );
-                    })}
-                  </div>
-
-                  {/* Empty state */}
-                  {projectAssumptions.length === 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="text-center text-gray-500">
-                        <p className="text-lg font-medium">No assumptions yet</p>
-                        <p className="text-sm mt-2">
-                          Add assumptions in the category view to see them here
-                        </p>
+                        {/* Bottom-right: Don't test. Usually don't build (High evidence + Unimportant) */}
+                        <div className="bg-quadrant-document border border-gray-400 p-4 relative">
+                          <h3 className="font-bold text-sm mb-2">Don't test. Usually don't build</h3>
+                          <p className="text-xs text-gray-600 leading-relaxed">
+                            Not impactful to users, but sometimes table stakes business functionality ends up here.
+                          </p>
+                        </div>
                       </div>
+
+                      {/* Assumption cards positioned on grid */}
+                      <div className="absolute inset-0 pointer-events-none">
+                        {projectAssumptions.map((assumption) => {
+                          const pos = getPosition(assumption);
+                          const clampedX = Math.max(5, Math.min(pos.x, 85));
+                          const clampedY = Math.max(5, Math.min(pos.y, 85));
+
+                          // Calculate pixel position for draggable
+                          // We need to get container dimensions to convert % to pixels
+                          const containerWidth = containerRef.current?.offsetWidth || 1000;
+                          const containerHeight = containerRef.current?.offsetHeight || 600;
+
+                          const cardWidth = 256; // w-64
+                          const xPixels = (clampedX / 100) * containerWidth - cardWidth / 2;
+                          const yPixels = (clampedY / 100) * containerHeight - 128; // approximate card height/2
+
+                          const nodeRef = getCardRef(assumption.id);
+
+                          return (
+                            <Draggable
+                              key={assumption.id}
+                              nodeRef={nodeRef}
+                              position={{ x: xPixels, y: yPixels }}
+                              onStart={() => handleDragStart(assumption.id)}
+                              onStop={(e, data) => handleDragStop(assumption, e, data)}
+                              bounds="parent"
+                            >
+                              <div
+                                ref={nodeRef}
+                                className={`absolute w-64 pointer-events-auto cursor-move ${
+                                  draggingId === assumption.id ? 'opacity-70 scale-105' : ''
+                                } transition-all`}
+                              >
+                                <AssumptionCard assumption={assumption} />
+                              </div>
+                            </Draggable>
+                          );
+                        })}
+                      </div>
+
+                      {/* Empty state */}
+                      {projectAssumptions.length === 0 && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="text-center text-gray-500">
+                            <p className="text-lg font-medium">No assumptions yet</p>
+                            <p className="text-sm mt-2">
+                              Add assumptions in the category view to see them here
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </TransformComponent>
-            </>
-          )}
-        </TransformWrapper>
+                  </TransformComponent>
+                </>
+              )}
+            </TransformWrapper>
+          </div>
+
+          {/* X-axis label — outside the canvas, below */}
+          <div className="flex justify-between text-xs font-medium text-gray-700 px-6 pointer-events-none select-none">
+            <span>Low evidence</span>
+            <span>← Evidence →</span>
+            <span>High evidence</span>
+          </div>
+
+        </div>
       </div>
     </div>
   );
