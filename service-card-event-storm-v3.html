@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Service Card Onboarding — Event Storm</title>
+<style>
+:root {
+  --top-h: 150px;   /* height reserved above the spine for actor + policy notes */
+  --spine-h: 60px;  /* reference height of a single spine note */
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #ede9e1;
+  background-image: radial-gradient(circle, #ccc8c0 1px, transparent 1px);
+  background-size: 22px 22px;
+  overflow-x: auto;
+  padding: 20px 40px 80px 194px;
+}
+
+/* ── LEGEND ──────────────────────────────── */
+.legend {
+  position: fixed; top: 16px; left: 14px;
+  background: #fff; border: 1px solid #ccc;
+  border-radius: 8px; padding: 11px 13px; z-index: 200;
+  box-shadow: 0 3px 12px rgba(0,0,0,.18); width: 162px;
+}
+.legend h3 {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .08em; color: #333; margin-bottom: 8px;
+  border-bottom: 1px solid #eee; padding-bottom: 5px;
+}
+.li { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; color: #444; font-size: 10px; }
+.ld { width: 13px; height: 13px; border-radius: 2px; flex-shrink: 0; }
+.ln { font-size: 9px; color: #777; margin-top: 7px; border-top: 1px solid #eee; padding-top: 6px; }
+
+/* ── TITLE + LABELS ──────────────────────── */
+.pg-title { font-size: 15px; font-weight: 800; color: #333; margin-bottom: 4px; }
+.pg-sub   { font-size: 11px; color: #888; margin-bottom: 18px; }
+.sec-lbl {
+  font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em;
+  padding: 3px 12px; border-radius: 20px; display: inline-block; margin-bottom: 8px;
+}
+.sl-on { background: #c8e6fa; color: #1a4c72; }
+.sl-ho { background: #d5f0dc; color: #1a5c2a; }
+
+/* ── FLOW STRIP ──────────────────────────── */
+/* One horizontal strip.  All elements use flex-start so tops align.
+   The spine appears at --top-h from the top of every element.         */
+.flow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  min-width: max-content;
+  margin-bottom: 6px;
+}
+
+/* ── STEP GROUP  sg = [actor/policy above] + [rm → cmd] ─ */
+.sg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+/* Top zone: actor + optional policy/decision.
+   Content aligns to the BOTTOM so notes sit just above the spine. */
+.sg .top {
+  min-height: var(--top-h);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  padding-bottom: 4px;
+}
+/* Spine zone: rm → cmd (or just cmd) laid out horizontally */
+.sg .spine {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+/* For parallel commands (stacked vertically at same step) */
+.sg .spine.par {
+  flex-direction: column;
+  gap: 3px;
+}
+.sg .spine.par .par-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* ── EVENT NODE  en = empty top + event(s) + below items ── */
+.en {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.en .top {
+  min-height: var(--top-h); /* keeps spine aligned — content here is EMPTY */
+}
+.en .spine {
+  display: flex;
+  flex-direction: column;  /* events stack vertically when parallel */
+  align-items: center;
+  gap: 3px;
+}
+.en .bot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 6px;
+}
+
+/* ── SPINE CONNECTOR ─ arrow between elements at spine level ── */
+/* padding-top = --top-h pushes the arrow to match where the spine sits */
+.sc {
+  padding-top: var(--top-h);
+  display: flex;
+  align-items: flex-start;
+  font-size: 15px;
+  color: #999;
+  padding-left: 3px;
+  padding-right: 3px;
+  flex-shrink: 0;
+}
+/* Mini arrow WITHIN a spine row (between rm and cmd) */
+.ma { font-size: 13px; color: #aaa; flex-shrink: 0; }
+
+/* ── HANDOVER DIVIDER ─ sits inline in the flow at spine level ── */
+.hd-wrap {
+  padding-top: calc(var(--top-h) - 10px); /* slight nudge up for visual balance */
+  display: flex;
+  align-items: flex-start;
+  flex-shrink: 0;
+  margin: 0 6px;
+}
+.hd-badge {
+  background: #e67e22; color: #fff;
+  font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em;
+  padding: 10px 8px; border-radius: 10px;
+  writing-mode: vertical-lr; transform: rotate(180deg);
+  box-shadow: 0 2px 8px rgba(230,126,34,.4);
+  white-space: nowrap; line-height: 1.8;
+}
+
+/* ── STICKY NOTE ─────────────────────────── */
+.n {
+  border-radius: 3px;
+  padding: 5px 7px;
+  font-size: 9.5px; line-height: 1.36; color: #1a1a1a;
+  box-shadow: 2px 3px 6px rgba(0,0,0,.2), 0 1px 2px rgba(0,0,0,.08);
+  position: relative; word-wrap: break-word; text-align: center;
+  flex-shrink: 0;
+}
+.n::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 8px; height: 8px; background: rgba(0,0,0,.13);
+  clip-path: polygon(0 0,100% 0,100% 100%); border-radius: 0 3px 0 0;
+}
+/* Type label inside note */
+.nt {
+  font-size: 7.5px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .06em; opacity: .55; margin-bottom: 2px; display: block;
+}
+
+/* Note widths */
+.w80  { width: 80px; }
+.w90  { width: 90px; }
+.w100 { width: 100px; }
+.w110 { width: 110px; }
+.w120 { width: 120px; }
+.w130 { width: 130px; }
+.w140 { width: 140px; }
+
+/* Note colours */
+.act { background: #FFF176; transform: rotate(-.3deg); }
+.rm  { background: #A5D6A7; transform: rotate(.6deg); }
+.cmd { background: #82CBF9; transform: rotate(.4deg); }
+.ev  { background: #FFAB40; transform: rotate(-.6deg); }
+.pol { background: #D4B4E9; transform: rotate(-.3deg); }
+.hs  { background: #F48FB1; transform: rotate(-.8deg); }
+.sys { background: #B0A89E; color: #fff; transform: rotate(.5deg); }
+.dec { background: #FFCC80; border: 2px solid #E67E00; transform: rotate(.2deg); }
+.res { background: #B2EBF2; border: 1px dashed #0097A7; transform: rotate(.3deg); }
+.up  { border-left: 3px solid #c0392b !important; text-align: left; padding-left: 5px !important; }
+</style>
+</head>
+<body>
+
+<!-- LEGEND -->
+<div class="legend">
+  <h3>Legend</h3>
+  <div class="li"><div class="ld" style="background:#FFAB40"></div>Event</div>
+  <div class="li"><div class="ld" style="background:#82CBF9"></div>Command</div>
+  <div class="li"><div class="ld" style="background:#FFF176"></div>Actor</div>
+  <div class="li"><div class="ld" style="background:#D4B4E9"></div>Policy</div>
+  <div class="li"><div class="ld" style="background:#A5D6A7"></div>Read Model</div>
+  <div class="li"><div class="ld" style="background:#F48FB1"></div>Hotspot 🔴</div>
+  <div class="li"><div class="ld" style="background:#FFCC80;border:2px solid #E67E00"></div>Decision</div>
+  <div class="li"><div class="ld" style="background:#B2EBF2;border:1px dashed #0097A7"></div>Resolved ✓</div>
+  <div class="li"><div class="ld" style="background:#B0A89E"></div>System / Tool</div>
+  <div class="ln"><span style="color:#c0392b;font-weight:700">Red left border</span> = unhappy path</div>
+</div>
+
+<div class="pg-title">Service Card Onboarding — Event Storm</div>
+<div class="pg-sub">Reads left → right &nbsp;|&nbsp; Actor sits above Command &nbsp;|&nbsp; System + Hotspots hang below Event</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  ONBOARDING SECTION                                           -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="sec-lbl sl-on">Onboarding Team</div>
+
+<div class="flow">
+
+  <!-- ① Move Service Epic ─────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w100"><span class="nt">Actor</span>Engagement Manager</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w100"><span class="nt">Command</span>Move service epic to Onboarding</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w100"><span class="nt">Event</span>Service Epic moved to Onboarding</div>
+    </div>
+    <div class="bot">
+      <div class="n sys w100"><span class="nt">System</span>JIRA DIOT</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ② Send onboarding manual ─────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w110"><span class="nt">Actor</span>Engagement Manager</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w110"><span class="nt">Command</span>Copy template &amp; send onboarding manual to service team</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w110"><span class="nt">Event</span>Onboarding manual sent to service team</div>
+    </div>
+    <div class="bot">
+      <div class="n sys w110"><span class="nt">System</span>Email / docx / Google Drive</div>
+      <div class="n hs w110"><span class="nt">Hotspot</span>Sent as attachment — no version control; replicated among users</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ③ RP fills manual ────────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w110"><span class="nt">Actor</span>RP Service Team</div>
+    </div>
+    <div class="spine">
+      <div class="n rm w110"><span class="nt">Read Model</span>Onboarding manual (docx / Google Drive)</div>
+      <span class="ma">→</span>
+      <div class="n cmd w110"><span class="nt">Command</span>Fill in forms in manual</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w110"><span class="nt">Event</span>Service name added to manual</div>
+      <div class="n ev w110"><span class="nt">Event</span>Start page URL added to manual</div>
+      <div class="n ev w110"><span class="nt">Event</span>Signed in state URL added to manual</div>
+      <div class="n ev w110"><span class="nt">Event</span>Link text added to manual</div>
+      <div class="n ev w110"><span class="nt">Event</span>Service description added to manual</div>
+      <div class="n pol w110"><span class="nt">Policy</span>If Welsh service → Welsh translation added if provided</div>
+    </div>
+    <div class="bot">
+      <div class="n hs w110"><span class="nt">Hotspot</span>High barrier to describing the service — hard to visualise what the card looks like</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ④ EM reviews draft ──────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w110"><span class="nt">Actor</span>Engagement Manager</div>
+    </div>
+    <div class="spine">
+      <div class="n rm w110"><span class="nt">Read Model</span>Draft of onboarding manual</div>
+      <span class="ma">→</span>
+      <div class="n cmd w110"><span class="nt">Command</span>Review draft of manual</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w110"><span class="nt">Event</span>Draft of manual reviewed</div>
+    </div>
+    <div class="bot">
+      <div class="n pol up w110"><span class="nt">Policy — unhappy path</span>If incomplete → request another draft via email (loops back)</div>
+      <div class="n hs w110"><span class="nt">Hotspot</span>No defined iteration limit or escalation path</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑤ Create Jira task ──────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w120"><span class="nt">Actor</span>Engagement Manager</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w120"><span class="nt">Command</span>Copy &amp; paste form contents from doc into Jira task template</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w120"><span class="nt">Event</span>Service Card Jira task created under Service Epic on DIOT</div>
+    </div>
+    <div class="bot">
+      <div class="n sys w120"><span class="nt">System</span>JIRA DIOT Epics / Home Card Task</div>
+      <div class="n hs w120"><span class="nt">Hotspot</span>Manual copy/paste — inconsistently applied; each EM has slightly different approach</div>
+      <div class="n hs w120"><span class="nt">Hotspot</span>Unclear user needs — who is the user at this stage?</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑥ CUCD content review ───────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w120"><span class="nt">Actor</span>CUCD Content Designer</div>
+      <div class="n pol w120"><span class="nt">Policy</span>3-week SLA for content review</div>
+    </div>
+    <div class="spine">
+      <div class="n rm w120"><span class="nt">Read Model</span>GDS Style Guide + Jira card</div>
+      <span class="ma">→</span>
+      <div class="n cmd w120"><span class="nt">Command</span>Review Jira task content against GDS style guide</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w120"><span class="nt">Event</span>Service name reviewed</div>
+      <div class="n ev w120"><span class="nt">Event</span>Service description reviewed</div>
+      <div class="n ev w120"><span class="nt">Event</span>Link text reviewed</div>
+      <div class="n ev w120"><span class="nt">Event</span>Start page URL reviewed</div>
+      <div class="n ev w120"><span class="nt">Event</span>Signed in state URL reviewed</div>
+      <div class="n ev w120"><span class="nt">Event</span>Welsh translation reviewed (if needed)</div>
+    </div>
+    <div class="bot">
+      <div class="n hs w120"><span class="nt">Hotspot</span>3-wk CUCD SLA + 2-wk setup + prod Client ID = very hard to deliver before go-live</div>
+      <div class="n hs w120"><span class="nt">Hotspot</span>Inconsistently applied due to resourcing constraints</div>
+      <div class="n hs up w120"><span class="nt">Hotspot — unhappy path</span>Rejection + refinement loop — significant potential for back and forth</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑦ Welsh translation request ─────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w100"><span class="nt">Actor</span>Welsh Translator</div>
+      <div class="n pol w100"><span class="nt">Policy</span>Only if service is available in Welsh</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w100"><span class="nt">Command</span>Request Welsh translation</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w100"><span class="nt">Event</span>Welsh translation requested</div>
+      <div class="n ev w100"><span class="nt">Event</span>Welsh translation added to Jira task</div>
+    </div>
+    <div class="bot">
+      <div class="n hs w100"><span class="nt">Hotspot</span>Will block Welsh support if translation not received in time!</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑧ RP submits URLs ───────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w110"><span class="nt">Actor</span>RP Service Team</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w110"><span class="nt">Command</span>Submit Home card URLs &amp; service description</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w110"><span class="nt">Event</span>Home card URLs submitted</div>
+      <div class="n ev w110"><span class="nt">Event</span>Service description submitted for review</div>
+    </div>
+    <div class="bot">
+      <div class="n sys w110"><span class="nt">System</span>JIRA DIOT / Confluence / Google Drive / Email</div>
+      <div class="n hs w110"><span class="nt">Hotspot</span>RP dev cannot test home page in integration environment</div>
+      <div class="n hs w110"><span class="nt">Hotspot</span>URLs sometimes not yet live or behind access restriction — Home can't test them</div>
+      <div class="n hs w110"><span class="nt">Hotspot</span>Clarifications on URLs → back and forth between RP and Home team</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑨ Assign to Home DM ─────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w110"><span class="nt">Actor</span>Engagement Manager</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w110"><span class="nt">Command</span>Assign Jira task to Home DM</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w110"><span class="nt">Event</span>Jira task assigned to Home DM (Bee)</div>
+    </div>
+    <div class="bot">
+      <div class="n sys w110"><span class="nt">System</span>JIRA DIOT Home Card Task</div>
+      <div class="n hs w110"><span class="nt">Hotspot</span>Process gap — handover is informal and opaque; lots of white space here</div>
+    </div>
+  </div>
+
+  <!-- HANDOVER DIVIDER ─────────────────────────── -->
+  <div class="sc">→</div>
+  <div class="hd-wrap">
+    <div class="hd-badge">Handover → Onboarding to Home Team</div>
+  </div>
+  <div class="sc">→</div>
+
+</div><!-- /onboarding flow -->
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  HOME TEAM SECTION                                            -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="sec-lbl sl-ho" style="margin-top:16px;">Home Team</div>
+
+<div class="flow">
+
+  <!-- ⑩ Bee QC ─────────────────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w110"><span class="nt">Actor</span>Bee (Home DM)</div>
+    </div>
+    <div class="spine">
+      <div class="n rm w110"><span class="nt">Read Model</span>DIOT card: start page link/text, signed in state link/text, Welsh status, Production Client ID</div>
+      <span class="ma">→</span>
+      <div class="n cmd w110"><span class="nt">Command</span>QC information provided by Onboarding</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w110"><span class="nt">Event</span>Information QC'd — all fields verified</div>
+    </div>
+    <div class="bot">
+      <div class="n pol up w110"><span class="nt">Policy — unhappy path</span>If fields incomplete → hand back to Onboarding (loops back)</div>
+      <div class="n hs w110"><span class="nt">Hotspot</span>QC should happen before Home gets involved — doesn't always</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑪ Create OLH ticket ─────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w120"><span class="nt">Actor</span>Bee (Home DM)</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w120"><span class="nt">Command</span>Duplicate service card template and stand up ticket on OLH board</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w120"><span class="nt">Event</span>OLH ticket created</div>
+    </div>
+    <div class="bot">
+      <div class="n sys w120"><span class="nt">System</span>OLH Jira board</div>
+      <div class="n hs w120"><span class="nt">Hotspot</span>DIOT ticket info mirrored manually to OLH ticket — including Dev environment info; no automation</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑫ Sprint scheduling ─────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w120"><span class="nt">Actor</span>Bee (Home DM)</div>
+      <div class="n pol w120"><span class="nt">Policy</span>Ticket in sprint at least 5 days before go-live; at least 2 days to schedule</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w120"><span class="nt">Command</span>Place ticket in sprint one week before estimated go-live</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w120"><span class="nt">Event</span>Ticket placed in sprint</div>
+    </div>
+    <div class="bot">
+      <div class="n hs w120"><span class="nt">Hotspot</span>Both SLAs (5 days, 2 days) are undocumented — not visible to services or team</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑬ Onboarding CD reviews content ─────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w100"><span class="nt">Actor</span>Onboarding Content Designer</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w100"><span class="nt">Command</span>Review service card content</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w100"><span class="nt">Event</span>Content reviewed by Onboarding CD</div>
+    </div>
+    <div class="bot">
+      <div class="n hs w100"><span class="nt">Hotspot</span>Should happen before Home gets involved — frequently doesn't</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑭ EM shares edit with RP ────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w100"><span class="nt">Actor</span>Engagement Manager</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w100"><span class="nt">Command</span>Share content edit with RP</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w100"><span class="nt">Event</span>Edit shared with RP</div>
+    </div>
+    <div class="bot"></div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑮ RP reviews content ────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w100"><span class="nt">Actor</span>RP</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w100"><span class="nt">Command</span>Review content &amp; return suggested edits</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w100"><span class="nt">Event</span>Content reviewed by RP</div>
+    </div>
+    <div class="bot"></div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑯ Update DIOT card ─────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w110"><span class="nt">Actor</span>Engagement Manager</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w110"><span class="nt">Command</span>Update DIOT Service Card with agreed content</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w110"><span class="nt">Event</span>DIOT Service Card updated</div>
+    </div>
+    <div class="bot">
+      <div class="n sys w110"><span class="nt">System</span>JIRA DIOT</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑰ Development — 3 PRs ──────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w120"><span class="nt">Actor</span>Dev</div>
+      <div class="n dec w120"><span class="nt">Decision</span><strong>showInSearchableList</strong><br>Private Beta → false<br>Public Beta → true (+ add URL &amp; link text)</div>
+    </div>
+    <div class="spine">
+      <div class="n rm w120"><span class="nt">Read Model</span>Beta status of service</div>
+      <span class="ma">→</span>
+      <div class="n cmd w120"><span class="nt">Command</span>Raise 3 PRs simultaneously:<br>① Client registry<br>② Account frontend<br>③ Account backend</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w120"><span class="nt">Event</span>3 PRs raised (PRs 2 &amp; 3 can be raised at same time)</div>
+    </div>
+    <div class="bot">
+      <div class="n sys w120"><span class="nt">System</span>GitHub / Client Registry / Account FE + BE</div>
+      <div class="n hs w120"><span class="nt">Hotspot</span>Services often don't know what showInSearchableList is</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑱ Deploy to Dev ──────────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w100"><span class="nt">Actor</span>Dev</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w100"><span class="nt">Command</span>Deploy to Dev environment for UCD review</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w100"><span class="nt">Event</span>Deployed to Dev environment</div>
+    </div>
+    <div class="bot">
+      <div class="n sys w100"><span class="nt">System</span>Dev environment</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑲ UCD + Dev review (parallel) ─────────────
+       Both run simultaneously: UCD review requires Dev deployment;
+       dev code review does not — both start once Dev is deployed.   -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w130"><span class="nt">Actor</span>Dev</div>
+      <div class="n pol w130"><span class="nt">Policy</span>UCD review requires Dev deployment. Dev code review does NOT — both run simultaneously once Dev is deployed.</div>
+    </div>
+    <div class="spine par">
+      <div class="par-row">
+        <div class="n cmd w130"><span class="nt">Command</span>Request UCD review via #di-one-login-home-ucd</div>
+      </div>
+      <div class="par-row">
+        <div class="n cmd w130"><span class="nt">Command</span>Request code / dev review</div>
+      </div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w130"><span class="nt">Event</span>UCD review of Dev screens complete</div>
+      <div class="n ev w130"><span class="nt">Event</span>Code / dev review complete</div>
+    </div>
+    <div class="bot">
+      <div class="n hs w130"><span class="nt">Hotspot</span>~2 day time sink depending on reviewer availability and environment access</div>
+      <div class="n hs w130"><span class="nt">Hotspot</span>Mel / Home UCD also reviews — potential duplication with Onboarding UCD review</div>
+      <div class="n hs w130"><span class="nt">Hotspot</span>Team doesn't always have capacity to review in time</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ⑳ Merge to main ──────────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w120"><span class="nt">Actor</span>Dev</div>
+      <div class="n pol w120"><span class="nt">Policy</span>Both UCD AND code review must be complete before merge</div>
+    </div>
+    <div class="spine">
+      <div class="n cmd w120"><span class="nt">Command</span>Merge to main and deploy to production</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w120"><span class="nt">Event</span>Merged to main — deployed to production</div>
+    </div>
+    <div class="bot">
+      <div class="n sys w120"><span class="nt">System</span>One Login Home (production) — home card metadata in GitHub as TypeScript; outside client registry</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ㉑ Sanity check + notify Mel ────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w120"><span class="nt">Actor</span>Dev</div>
+    </div>
+    <div class="spine par">
+      <div class="par-row">
+        <div class="n cmd w120"><span class="nt">Command</span>Sanity check deployment across build, staging, integration &amp; production</div>
+      </div>
+      <div class="par-row">
+        <div class="n cmd w120"><span class="nt">Command</span>Notify Mel PR is merged (Slack if urgent, or at standup)</div>
+      </div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w120"><span class="nt">Event</span>Successful deployment confirmed</div>
+      <div class="n ev w120"><span class="nt">Event</span>Mel notified — ticket moves to follow-up swim lane</div>
+    </div>
+    <div class="bot">
+      <div class="n res w120"><span class="nt">Resolved ✓</span>Previous process had extra Dev review steps here — removed. This is a sanity check only, in production environments. No further review gates.</div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+
+  <!-- ㉒ Wrap-up ───────────────────────────────── -->
+  <div class="sg">
+    <div class="top">
+      <div class="n act w120"><span class="nt">Actor</span>Bee (Home DM)</div>
+    </div>
+    <div class="spine par">
+      <div class="par-row">
+        <div class="n cmd w120"><span class="nt">Command</span>Update Service Card Record</div>
+      </div>
+      <div class="par-row">
+        <div class="n cmd w120"><span class="nt">Command</span>Change status to Done on DIOT card</div>
+      </div>
+      <div class="par-row">
+        <div class="n cmd w120"><span class="nt">Command</span>Update programme roadmap</div>
+      </div>
+      <div class="par-row">
+        <div class="n cmd w120"><span class="nt">Command</span>Update delivery dashboard</div>
+      </div>
+    </div>
+  </div>
+  <div class="sc">→</div>
+  <div class="en">
+    <div class="top"></div>
+    <div class="spine">
+      <div class="n ev w120"><span class="nt">Event</span>Service Card Record updated</div>
+      <div class="n ev w120"><span class="nt">Event</span>DIOT card closed (status → Done)</div>
+      <div class="n ev w120"><span class="nt">Event</span>Programme roadmap updated — service marked as onboarded</div>
+      <div class="n ev w120"><span class="nt">Event</span>Delivery dashboard updated</div>
+    </div>
+    <div class="bot">
+      <div class="n rm w120"><span class="nt">Read Model</span>Service Card Record — useful for research planning and as a decision audit trail</div>
+      <div class="n sys w120"><span class="nt">System</span>JIRA DIOT / Programme roadmap / Delivery dashboard</div>
+    </div>
+  </div>
+
+</div><!-- /home flow -->
+</body>
+</html>
